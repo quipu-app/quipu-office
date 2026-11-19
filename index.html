@@ -1,0 +1,2815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quipu Office</title>
+<meta name="theme-color" content="#3B5E94">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ===== Colores de la familia Quipu ===== */
+:root {
+  --fondo-pagina: #DCE5F1;
+  --quipu-blue: #3B5E94;
+  --quipu-blue-dark: #2C4875;
+  --quipu-blue-light: #4D74B0;
+  --quipu-brown: #7C5C46;
+  --quipu-brown-dark: #543C2C;
+  --quipu-screen: #C6E6F5;
+  --screen-bar: #AED7EC;
+  --ink: #0D1117;
+  --led-red: #E24943;
+  --led-yellow: #F4C430;
+  --led-green: #6CE04B;
+  --texto: #4D74B0;   --texto-osc: #2C4875;
+  --calculo: #5CBF45; --calculo-osc: #3A8A2A;
+  --diapo: #F4C430;   --diapo-osc: #C7951A;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --fondo-pagina: #0C1017; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --fondo-pagina: #0C1017; color-scheme: dark; }
+
+:root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; width: 100%; }
+body {
+  background: var(--fondo-pagina);
+  font-family: 'Nunito', 'Trebuchet MS', sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--led-yellow); outline-offset: 3px; }
+
+/* ===== Carcasa ===== */
+.quipu-device {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  background: linear-gradient(180deg, var(--quipu-blue-light) 0%, var(--quipu-blue) 12%, var(--quipu-blue) 88%, var(--quipu-blue-dark) 100%);
+  border: 4px solid var(--ink);
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 10px 18px 12px;
+  box-shadow: inset 0 3px 0 rgba(255,255,255,.18);
+  user-select: none; overflow: hidden;
+}
+@media (min-width: 640px) { .quipu-device { padding: 12px 26px 14px; } }
+svg.corner { position: absolute; width: 58px; height: 58px; z-index: 35; pointer-events: none; }
+@media (min-width: 640px) { svg.corner { width: 76px; height: 76px; } }
+svg.corner-tl { top: -3px; left: -3px; }
+svg.corner-tr { top: -3px; right: -3px; transform: scaleX(-1); }
+svg.corner-bl { bottom: -3px; left: -3px; transform: scaleY(-1); }
+svg.corner-br { bottom: -3px; right: -3px; transform: scale(-1,-1); }
+.side-rail { position: absolute; top: 48px; bottom: 48px; width: 11px; background: var(--quipu-brown); z-index: 20; }
+@media (min-width: 640px) { .side-rail { top: 66px; bottom: 66px; width: 14px; } }
+.side-rail-left { left: 0; border-right: 3.5px solid var(--ink); }
+.side-rail-right { right: 0; border-left: 3.5px solid var(--ink); }
+
+/* Cabecera */
+.device-header { display: flex; align-items: center; gap: 16px; padding: 2px 34px 6px; flex-shrink: 0; z-index: 25; }
+@media (min-width: 640px) { .device-header { padding: 2px 48px 8px; gap: 22px; } }
+.lens-outer {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #E6EEF5 70%, #B4C3D1 100%);
+  border: 3.5px solid var(--ink); display: grid; place-items: center;
+  box-shadow: 0 0 18px rgba(215,245,165,.55), 0 3px 0 var(--ink);
+  transition: transform .18s ease, box-shadow .22s ease;
+}
+@media (min-width: 640px) { .lens-outer { width: 58px; height: 58px; } }
+.lens-outer.pulso { transform: scale(1.07); box-shadow: 0 0 28px rgba(235,255,175,.95), 0 0 10px #fff, 0 3px 0 var(--ink); }
+.lens-glass { position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 35% 35%, #E7F79C 0%, #A9CC66 55%, #6B8E4E 100%); border: 2.5px solid var(--ink); }
+@media (min-width: 640px) { .lens-glass { width: 42px; height: 42px; } }
+.lens-glass::before { content: ''; position: absolute; top: 4px; left: 5px; width: 10px; height: 8px; background: #fff; border-radius: 50%; transform: rotate(-25deg); }
+.lens-glass::after { content: ''; position: absolute; bottom: 5px; right: 6px; width: 4px; height: 4px; background: rgba(255,255,255,.85); border-radius: 50%; }
+
+.leds-group { display: flex; align-items: center; gap: 10px; }
+@media (min-width: 640px) { .leds-group { gap: 14px; } }
+.led { position: relative; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--ink); opacity: .48; transition: opacity .18s, transform .18s, box-shadow .2s; }
+@media (min-width: 640px) { .led { width: 22px; height: 22px; } }
+.led::after { content: ''; position: absolute; top: 2px; left: 3px; width: 5px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.75); }
+.led-red { background: var(--led-red); } .led-yellow { background: var(--led-yellow); } .led-green { background: var(--led-green); }
+.led.lit-red { opacity: 1; transform: scale(1.16); box-shadow: 0 0 16px #FF5E57, inset 0 0 6px #fff; }
+.led.lit-yellow { opacity: 1; transform: scale(1.16); box-shadow: 0 0 16px #FFE169, inset 0 0 6px #fff; }
+.led.lit-green { opacity: 1; transform: scale(1.12); box-shadow: 0 0 16px #7BFF59, inset 0 0 6px #fff; }
+
+.placa-programa {
+  margin-left: auto; padding: 5px 18px 6px; border: 3px solid var(--ink); border-radius: 12px;
+  background: var(--quipu-blue-dark); box-shadow: inset 0 2px 0 rgba(255,255,255,.15), 0 3px 0 var(--ink);
+  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.1rem; color: #98CEFA; letter-spacing: .5px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform .08s, box-shadow .08s, background-color .15s;
+}
+@media (min-width: 640px) { .placa-programa { font-size: 1.32rem; padding: 5px 22px 7px; } }
+.placa-programa:hover { background: #34568A; transform: translateY(-1px); box-shadow: inset 0 2px 0 rgba(255,255,255,.22), 0 4px 0 var(--ink); }
+.placa-programa:active, .placa-programa.abierto { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255,255,255,.1), 0 1px 0 var(--ink); background: #21375B; color: #F4C430; }
+
+/* Marco marrón y pantalla celeste */
+.screen-bezel { flex: 1; min-height: 0; min-width: 0; margin: 0 8px; background: var(--quipu-brown); border: 3.5px solid var(--ink);
+  border-radius: 18px; padding: 6px; display: flex; overflow: hidden; z-index: 22;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.2), 0 4px 0 rgba(0,0,0,.25); }
+@media (min-width: 640px) { .screen-bezel { margin: 0 14px; border-radius: 20px; padding: 8px; } }
+.screen-inner { flex: 1; min-height: 0; min-width: 0; background: var(--quipu-brown-dark); border: 3px solid var(--ink); border-radius: 12px; padding: 4px; display: flex; overflow: hidden; }
+.screen-display { position: relative; flex: 1; min-height: 0; min-width: 0; background: var(--quipu-screen);
+  border: 2.5px solid var(--ink); border-radius: 9px; overflow: hidden; display: flex; }
+
+/* ===== Cajón lateral ===== */
+.cajon {
+  width: 192px; flex-shrink: 0; background: var(--screen-bar); border-right: 2.5px solid var(--ink);
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 12px;
+}
+.estado-sync {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px;
+  border: 2.5px solid var(--ink); border-radius: 12px; background: #fff;
+  font-weight: 800; font-size: .84rem; line-height: 1.2; text-align: left;
+  box-shadow: 0 2.5px 0 var(--ink); overflow: hidden;
+}
+.estado-sync > span:last-child { min-width: 0; flex: 1; }
+#syncTexto { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estado-sync:active { transform: translateY(1.5px); box-shadow: 0 .5px 0 var(--ink); }
+.punto { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); background: var(--led-green); flex-shrink: 0; }
+.estado-sync.ocupado .punto { background: var(--led-yellow); animation: titila .6s steps(2) infinite; }
+@keyframes titila { 50% { opacity: .35; } }
+.estado-sync small { display: block; font-weight: 700; color: #3A4C60; font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cajon-sep { height: 2px; background: rgba(13,17,23,.25); margin: 4px 2px; border-radius: 2px; }
+.cajon-btn {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  border: 2.5px solid transparent; border-radius: 12px; background: none;
+  font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1.05rem; text-align: left;
+}
+.cajon-btn svg { width: 28px; height: 28px; flex-shrink: 0; }
+.cajon-btn:hover { background: rgba(255,255,255,.55); }
+.cajon-btn[aria-current="page"] { background: #fff; border-color: var(--ink); box-shadow: 0 2.5px 0 var(--ink); }
+
+/* ===== Vistas internas ===== */
+.principal { flex: 1; min-width: 0; overflow-y: auto; padding: 18px 24px 26px; scrollbar-width: thin; scrollbar-color: var(--quipu-brown) transparent; }
+.principal::-webkit-scrollbar { width: 8px; }
+.principal::-webkit-scrollbar-thumb { background: var(--quipu-brown); border-radius: 999px; border: 2px solid var(--quipu-screen); }
+.vista { display: none; }
+.vista.activa { display: block; }
+
+.saludo { margin-bottom: 18px; }
+.titulo-office { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: clamp(2rem, 4.2vw, 2.9rem); line-height: 1;
+  color: #fff; paint-order: stroke fill;
+  text-shadow: 3px 3px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 0 3px 0 var(--ink), 3px 0 0 var(--ink), 0 -2px 0 var(--ink), -2px 0 0 var(--ink), 5px 6px 0 var(--quipu-blue); }
+
+.seccion-titulo { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1.25rem; margin: 6px 0 14px; display: flex; align-items: center; gap: 10px; }
+.seccion-titulo::after { content: ''; flex: 1; height: 2.5px; background: var(--ink); opacity: .18; border-radius: 2px; }
+
+/* Recibidor */
+.recibidor-panel {
+  background: rgba(255, 255, 255, 0.55); border: 3px solid var(--ink);
+  border-radius: 20px; padding: 22px 20px; box-shadow: 0 5px 0 var(--ink); margin-top: 8px;
+}
+.recibidor-intro { text-align: center; margin-bottom: 20px; }
+.recibidor-intro h2 { font-family: 'Fredoka', sans-serif; font-size: 1.45rem; }
+.recibidor-intro p { font-weight: 700; color: #3A4C60; font-size: .95rem; }
+
+.recibidor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.tecla { --c: var(--texto); --c-osc: var(--texto-osc);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0; background: none; border: 0; }
+.tecla .gorro { display: block; position: relative; width: min(122px, 100%); aspect-ratio: 1; border: 3.5px solid var(--ink); border-radius: 22px;
+  background: var(--c-osc); box-shadow: 0 6px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.tecla .gorro::before { content: ''; position: absolute; inset: 7px 7px 13px; border: 3px solid var(--ink); border-radius: 15px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 70%, #fff) 0%, var(--c) 45%); }
+.tecla .letra { position: absolute; inset: 7px 7px 13px; display: grid; place-items: center; font-family: 'Fredoka', sans-serif;
+  font-weight: 700; font-size: clamp(2.4rem, 5vw, 3.6rem); color: #fff; z-index: 1;
+  text-shadow: 2px 2px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 0 3px 0 var(--ink); }
+.tecla:hover .gorro { transform: translateY(-2px); box-shadow: 0 8px 0 var(--ink); }
+.tecla:active .gorro, .tecla.apretada .gorro { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+.tecla b { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: clamp(1rem, 1.9vw, 1.2rem); max-width: 100%; overflow-wrap: anywhere; line-height: 1.15; }
+.tecla span { font-size: .84rem; font-weight: 700; color: #3A4C60; margin-top: -8px; }
+.tecla-calculo { --c: var(--calculo); --c-osc: var(--calculo-osc); }
+.tecla-diapo { --c: var(--diapo); --c-osc: var(--diapo-osc); }
+
+/* Recientes */
+.recientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 18px 16px; }
+.archivo { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px 10px; border: 2px solid transparent;
+  border-radius: 12px; background: none; text-align: center; }
+.archivo:hover { background: rgba(255,255,255,.6); border-color: var(--ink); }
+.hoja { position: relative; width: 64px; height: 78px; }
+.hoja svg { width: 100%; height: 100%; display: block; }
+.etiqueta { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 1px 8px 2px; border: 2px solid var(--ink);
+  border-radius: 7px; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .76rem; color: #fff; white-space: nowrap;
+  text-shadow: 1px 1px 0 var(--ink); }
+.et-texto { background: var(--texto); } .et-calculo { background: var(--calculo); } .et-diapo { background: var(--diapo); color: var(--ink); text-shadow: none; }
+.archivo b { font-weight: 800; font-size: .88rem; line-height: 1.2; margin-top: 4px; overflow-wrap: anywhere; }
+.archivo small { font-weight: 700; font-size: .74rem; color: #4A5D70; }
+
+/* Vista interna de módulos */
+.modulo-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.pildora-mod { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.05rem; padding: 6px 14px; border: 2.5px solid var(--ink); border-radius: 11px; box-shadow: 0 2.5px 0 var(--ink); color: #fff; text-shadow: 1px 1px 0 var(--ink); white-space: nowrap; }
+.mod-texto { background: var(--texto); }
+.mod-calculo { background: var(--calculo); }
+.mod-diapo { background: var(--diapo); color: var(--ink); text-shadow: none; }
+.btn-volver-office { background: #fff; border: 2.5px solid var(--ink); border-radius: 11px; padding: 6px 14px; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .92rem; box-shadow: 0 2.5px 0 var(--ink); white-space: nowrap; }
+.btn-volver-office:active { transform: translateY(1.5px); box-shadow: 0 .5px 0 var(--ink); }
+
+/* ===== CONTROLES COMPARTIDOS DE MÓDULOS ===== */
+#vista-texto.activa,
+#vista-calculo.activa,
+#vista-diapo.activa {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 10px 16px 10px;
+  overflow: hidden;
+}
+
+.mod-topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; flex-shrink: 0; }
+.mod-title-input {
+  flex: 1; min-width: 160px; background: #fff; border: 2.5px solid var(--ink); border-radius: 11px;
+  padding: 6px 12px; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1.02rem; color: var(--ink);
+}
+.mod-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.q-btn {
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 11px; padding: 6px 12px;
+  font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .92rem; box-shadow: 0 2.5px 0 var(--ink);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  transition: transform .07s, box-shadow .07s, background .12s;
+}
+.q-btn:hover { background: #F1F8FC; }
+.q-btn:active { transform: translateY(1.5px); box-shadow: 0 .5px 0 var(--ink); }
+.q-btn-save { background: var(--led-green); }
+.q-btn-save:hover { background: #7EEB5E; }
+.q-btn-doc { background: #98CEFA; }
+.q-btn-xls { background: #86EFAC; }
+.q-btn-pdf { background: var(--led-yellow); }
+.q-btn-present { background: #FDBA74; }
+
+.mod-ribbon {
+  position: relative; background: var(--screen-bar); border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 6px 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin-bottom: 8px; box-shadow: 0 3px 0 var(--ink); flex-shrink: 0; z-index: 20;
+}
+.ribbon-group { display: inline-flex; align-items: center; gap: 5px; padding-right: 7px; border-right: 2px solid rgba(13, 17, 23, 0.22); }
+.ribbon-group:last-child { border-right: none; padding-right: 0; }
+
+.rib-select {
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 9px; padding: 3px 8px; height: 36px;
+  font-weight: 800; font-size: .86rem; color: var(--ink); cursor: pointer;
+}
+.rib-tool {
+  min-width: 36px; height: 36px; padding: 0 9px; background: #fff; border: 2.5px solid var(--ink); border-radius: 9px;
+  font-weight: 800; font-size: .86rem; box-shadow: 0 2px 0 var(--ink);
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;
+}
+.rib-tool:hover { background: #E8F4FA; }
+.rib-tool:active, .rib-tool.activo { transform: translateY(1.5px); box-shadow: none; background: var(--led-yellow); }
+.rib-tool.grabando { background: var(--led-red); color: #fff; }
+.rib-color { width: 34px; height: 36px; padding: 2px; background: #fff; border: 2.5px solid var(--ink); border-radius: 9px; cursor: pointer; }
+
+/* Selector interactivo de tamaño de tabla */
+.table-picker-wrap { position: relative; display: inline-block; }
+.table-popover {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0;
+  background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 10px;
+  box-shadow: 0 5px 0 var(--ink); z-index: 50; width: max-content;
+}
+.table-popover.abierto { display: block; }
+.table-popover-label { font-family: 'Fredoka', sans-serif; font-size: .86rem; font-weight: 600; text-align: center; margin-bottom: 7px; color: var(--ink); }
+.table-grid-selector { display: grid; grid-template-columns: repeat(8, 20px); grid-template-rows: repeat(8, 20px); gap: 3px; }
+.table-cell-opt { width: 20px; height: 20px; border: 2px solid var(--ink); border-radius: 4px; background: #E8F4FA; cursor: pointer; }
+.table-cell-opt.seleccionada { background: var(--led-yellow); }
+
+/* ===== ESCRITORIO QUIPUTEXTO CON HOJAS A4 REALES ===== */
+.qtext-desk {
+  flex: 1; min-height: 0; overflow: auto;
+  background: #A9D0E5;
+  background-image: radial-gradient(rgba(13, 17, 23, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border: 2.5px solid var(--ink); border-radius: 12px; padding: 24px 24px 36px;
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+  scrollbar-width: thin; scrollbar-color: var(--quipu-brown) transparent;
+}
+.qtext-pages-stack { display: flex; flex-direction: column; align-items: center; gap: 32px; width: 100%; }
+
+.qtext-sheet {
+  position: relative;
+  width: 794px;
+  max-width: 100%;
+  height: 1056px;
+  background: #ffffff;
+  border: 2.5px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 0 7px 0 rgba(13, 17, 23, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  transition: width 0.15s ease, height 0.15s ease;
+}
+.qtext-sheet.horizontal {
+  width: 1056px;
+  height: 760px;
+}
+.qtext-sheet.ancho-completo { width: 100% !important; }
+
+.sheet-badge-bar {
+  position: absolute; top: -22px; right: 2px; display: flex; align-items: center; gap: 6px;
+  font-family: 'Fredoka', sans-serif; font-size: .75rem; font-weight: 600; color: #1E3A5F; user-select: none;
+}
+.btn-del-sheet {
+  background: #FCA5A5; border: 1.5px solid var(--ink); border-radius: 5px;
+  padding: 0 5px; font-size: .72rem; font-weight: 800; line-height: 1.3;
+}
+.btn-del-sheet:hover { background: #F87171; }
+
+.qtext-header-zone, .qtext-footer-zone {
+  display: none; padding: 14px 52px; font-size: 13.5px; color: #334155;
+  outline: none; user-select: text; cursor: text; flex-shrink: 0;
+}
+.qtext-header-zone.visible { display: block; border-bottom: 1.5px solid #E2E8F0; }
+.qtext-footer-zone.visible { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1.5px solid #E2E8F0; }
+.qtext-header-zone:empty::before, .qtext-footer-text:empty::before { content: attr(data-placeholder); color: #94A3B8; pointer-events: none; }
+.qtext-footer-text { flex: 1; outline: none; }
+
+.qtext-page-num {
+  display: none; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 13.5px;
+  color: #334155; padding: 2px 6px; border-radius: 4px; outline: none; user-select: text; cursor: text;
+}
+.qtext-page-num.visible { display: inline-block; }
+.qtext-page-num:hover, .qtext-page-num:focus { background: #F1F5F9; outline: 1.5px dashed #94A3B8; }
+
+.qtext-page-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 36px 52px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #0D1117;
+  outline: none;
+  user-select: text;
+  cursor: text;
+}
+.qtext-page-body:empty::before { content: attr(data-placeholder); color: #7B8999; pointer-events: none; }
+.qtext-page-body table { width: 100%; border-collapse: collapse; margin: 10px 0; table-layout: fixed; }
+.qtext-page-body td, .qtext-page-body th { border: 2px solid #0D1117; padding: 6px 10px; word-wrap: break-word; }
+.qtext-page-body img { max-width: 100%; max-height: 480px; height: auto; border-radius: 6px; margin: 8px 0; }
+
+.mod-statusbar {
+  margin-top: 6px; display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; font-size: .82rem; font-weight: 800; color: #2B3A4A; flex-shrink: 0; min-height: 22px;
+}
+.zoom-controls { display: inline-flex; align-items: center; gap: 5px; background: var(--screen-bar); border: 2px solid var(--ink); border-radius: 9px; padding: 3px 8px; }
+.zoom-btn { background: #fff; border: 2px solid var(--ink); border-radius: 6px; padding: 0 8px; height: 24px; font-weight: 900; font-size: .82rem; line-height: 1; }
+.zoom-btn:hover, .zoom-btn.activo { background: var(--led-yellow); }
+.zoom-value { min-width: 44px; text-align: center; font-family: 'Fredoka', sans-serif; font-size: .85rem; }
+
+/* ===== MÓDULO 2: QUIPUCÁLCULO ===== */
+.qcalc-formulabar {
+  display: flex; align-items: center; gap: 8px; background: #fff;
+  border: 2.5px solid var(--ink); border-radius: 11px; padding: 5px 10px;
+  margin-bottom: 8px; box-shadow: 0 2.5px 0 var(--ink); flex-shrink: 0;
+}
+.qcalc-cell-ref {
+  min-width: 64px; text-align: center; background: var(--screen-bar);
+  border: 2px solid var(--ink); border-radius: 8px; padding: 3px 8px;
+  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: .92rem;
+}
+.qcalc-fx-badge { font-family: 'Fredoka', sans-serif; font-weight: 700; font-style: italic; color: var(--calculo-osc); padding: 0 4px; font-size: 1.05rem; }
+.qcalc-fx-input { flex: 1; border: none; outline: none; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .96rem; color: var(--ink); user-select: text; }
+
+.qcalc-workspace { flex: 1; min-height: 0; display: flex; gap: 10px; overflow: hidden; }
+.qcalc-grid-wrap {
+  flex: 1; min-width: 0; min-height: 0; overflow: auto; background: #fff;
+  border: 2.5px solid var(--ink); border-radius: 10px; position: relative;
+  scrollbar-width: thin; scrollbar-color: var(--quipu-brown) transparent;
+}
+
+.qcalc-chart-panel {
+  display: none; width: 410px; flex-shrink: 0; background: #fff;
+  border: 2.5px solid var(--ink); border-radius: 14px; padding: 14px;
+  box-shadow: 0 4px 0 var(--ink);
+  flex-direction: column; gap: 10px; overflow-y: auto;
+}
+.qcalc-chart-panel.visible { display: flex; }
+.qcalc-chart-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid #E2E8F0; }
+.qcalc-chart-title-input {
+  flex: 1; min-width: 0; border: 2px solid transparent; border-radius: 7px;
+  padding: 2px 6px; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink);
+}
+.qcalc-chart-title-input:hover, .qcalc-chart-title-input:focus { border-color: var(--ink); background: #F8FAFC; outline: none; }
+.chart-type-tabs { display: flex; gap: 5px; }
+.chart-type-btn { flex: 1; background: #F1F5F9; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 6px; font-family: 'Fredoka', sans-serif; font-size: .8rem; font-weight: 600; }
+.chart-type-btn.activo { background: var(--led-yellow); }
+.qcalc-chart-canvas { flex: 1; min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #F8FAFC; border: 2px solid #CBD5E1; border-radius: 10px; padding: 10px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; margin-top: 8px; }
+.chart-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 800; color: #334155; }
+.chart-legend-dot { width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid var(--ink); flex-shrink: 0; }
+
+.qcalc-sheets-bar { display: flex; align-items: center; gap: 6px; margin-top: 7px; flex-shrink: 0; overflow-x: auto; padding-bottom: 2px; }
+.sheet-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--screen-bar); border: 2.5px solid var(--ink); border-radius: 10px;
+  padding: 4px 11px; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .86rem;
+  cursor: pointer; transition: background .12s;
+}
+.sheet-tab:hover { background: #C9E7F7; }
+.sheet-tab.activa { background: #fff; box-shadow: 0 2.5px 0 var(--ink); }
+.sheet-tab-name { outline: none; min-width: 28px; user-select: text; }
+.sheet-tab-name[contenteditable="true"] { background: #FEF9C3; padding: 0 4px; border-radius: 4px; cursor: text; }
+.sheet-tab-action { font-size: .74rem; opacity: 0.65; padding: 0 2px; border-radius: 4px; }
+.sheet-tab-action:hover { opacity: 1; background: rgba(13, 17, 23, 0.1); }
+
+.qcalc-table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: fixed; user-select: none; }
+.qcalc-table th {
+  position: sticky; top: 0; z-index: 5; background: #DCEEF8; border: 1.5px solid #64748B;
+  font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .86rem; color: var(--ink);
+  height: 28px; width: 108px; text-align: center;
+}
+.qcalc-table th.corner-th { left: 0; z-index: 8; width: 46px; background: #AED7EC; }
+.qcalc-table td.row-header {
+  position: sticky; left: 0; z-index: 4; background: #DCEEF8; border: 1.5px solid #64748B;
+  font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: .82rem; text-align: center; width: 46px;
+}
+.qcalc-table td.grid-cell {
+  position: relative; border: 1px solid #CBD5E1; height: 30px; width: 108px; padding: 3px 7px;
+  font-size: .9rem; font-weight: 700; color: var(--ink); background: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: cell;
+}
+.qcalc-table td.grid-cell.en-rango { background: #DCFCE7 !important; }
+.qcalc-table td.grid-cell.en-autorrelleno { outline: 2px dashed #16A34A; outline-offset: -2px; background: #FEF9C3 !important; }
+.qcalc-table td.grid-cell.activa { outline: 2.5px solid #16A34A; outline-offset: -2px; background: #F0FDF4; z-index: 3; overflow: visible; }
+.qcalc-table td.grid-cell.editando { user-select: text; cursor: text; background: #fff !important; }
+.qcalc-table td.grid-cell.tiene-formula::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  border-style: solid; border-width: 6px 6px 0 0; border-color: #16A34A transparent transparent transparent;
+}
+.qcalc-table td.grid-cell.error-val { color: #DC2626; }
+.fill-handle {
+  position: absolute; right: -5px; bottom: -5px; width: 10px; height: 10px;
+  background: #16A34A; border: 1.5px solid #ffffff; box-shadow: 0 0 0 1px #0D1117;
+  cursor: crosshair; z-index: 10;
+}
+
+/* ===== MÓDULO 3: QUIPUDIAPOSITIVAS (INTACTO) ===== */
+.qslide-contextual-bar {
+  display: none; background: #FEF9C3; border: 2px solid var(--ink); border-radius: 10px;
+  padding: 4px 8px; margin-bottom: 8px; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
+}
+.qslide-contextual-bar.visible { display: flex; }
+
+.qslide-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 196px 1fr; gap: 12px; overflow: hidden; }
+.qslide-workspace.con-comentarios { grid-template-columns: 196px 1fr 250px; }
+
+.qslide-thumbs {
+  background: var(--screen-bar); border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 10px 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  scrollbar-width: thin; scrollbar-color: var(--quipu-brown) transparent;
+}
+
+.slide-thumb-card {
+  position: relative; background: #fff; border: 2.5px solid var(--ink); border-radius: 9px;
+  padding: 6px; cursor: grab; transition: transform .08s, box-shadow .08s, opacity .15s;
+}
+.slide-thumb-card.dragging { opacity: 0.45; }
+.slide-thumb-card.drag-over { border-top: 4px solid #2563EB; }
+.slide-thumb-card.activa { border-color: #D97706; box-shadow: 0 0 0 2.5px var(--led-yellow), 0 3px 0 var(--ink); }
+.slide-thumb-num {
+  font-family: 'Fredoka', sans-serif; font-size: .74rem; font-weight: 700; color: #334155;
+  margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+}
+.thumb-move-btns { display: inline-flex; gap: 3px; }
+.thumb-move-btn { background: #E2E8F0; border: 1.5px solid var(--ink); border-radius: 4px; padding: 0 4px; font-size: .66rem; line-height: 1.3; }
+.thumb-move-btn:hover { background: var(--led-yellow); }
+
+.slide-thumb-preview { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 1.5px solid #94A3B8; border-radius: 5px; overflow: hidden; padding: 5px; font-size: .56rem; }
+
+.qslide-stage-wrap {
+  flex: 1; min-width: 0; min-height: 0; background: #A9D0E5;
+  background-image: radial-gradient(rgba(13, 17, 23, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px; border: 2.5px solid var(--ink); border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: auto;
+}
+
+.qslide-canvas {
+  position: relative; width: 860px; max-width: 100%; aspect-ratio: 16 / 9; background: #ffffff;
+  border: 3px solid var(--ink); border-radius: 8px; box-shadow: 0 7px 0 rgba(13, 17, 23, 0.25);
+  overflow: hidden; transition: width 0.15s ease;
+}
+
+.slide-item { position: absolute; border: 2px dashed transparent; border-radius: 6px; min-width: 48px; min-height: 24px; }
+.slide-item:hover, .slide-item.seleccionado { border-color: #2563EB; }
+
+.slide-item-dragbar {
+  display: none; position: absolute; top: -22px; left: 0; background: #2563EB; color: #fff;
+  font-family: 'Fredoka', sans-serif; font-size: .68rem; padding: 1px 8px; border-radius: 6px 6px 0 0;
+  cursor: move; gap: 8px; align-items: center; white-space: nowrap; z-index: 15;
+}
+.slide-item:hover .slide-item-dragbar, .slide-item.seleccionado .slide-item-dragbar { display: inline-flex; }
+.slide-item-del { background: #EF4444; color: #fff; border: none; border-radius: 4px; padding: 0 5px; font-weight: 900; cursor: pointer; }
+.slide-item-resize {
+  display: none; position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px;
+  background: #2563EB; border: 2px solid #fff; border-radius: 50%; cursor: nwse-resize; z-index: 15;
+}
+.slide-item:hover .slide-item-resize, .slide-item.seleccionado .slide-item-resize { display: block; }
+
+.slide-text-content { width: 100%; height: 100%; padding: 6px 10px; outline: none; user-select: text; cursor: text; word-wrap: break-word; overflow: hidden; }
+.slide-img-content { width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: block; }
+.slide-shape-content {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 8px; font-weight: 800; outline: none; user-select: text; cursor: text;
+}
+.slide-line-content { width: 100%; height: 4px; background: currentColor; border-radius: 999px; margin-top: 10px; }
+.slide-footer-stamp { position: absolute; bottom: 8px; right: 14px; font-family: 'Fredoka', sans-serif; font-size: .78rem; opacity: 0.65; pointer-events: none; }
+
+.qslide-comments-panel { display: none; background: #fff; border: 2.5px solid var(--ink); border-radius: 12px; padding: 10px; flex-direction: column; gap: 8px; overflow-y: auto; }
+.qslide-comments-panel.visible { display: flex; }
+
+.qslide-notes-box {
+  width: 100%; max-width: 860px; background: #fff; border: 2.5px solid var(--ink);
+  border-radius: 10px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.qslide-notes-input { flex: 1; border: none; outline: none; font-size: .85rem; font-weight: 700; user-select: text; }
+
+/* Modo Exposición */
+.present-overlay { display: none; position: fixed; inset: 0; background: #090D16; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+.present-overlay.activo { display: flex; }
+.present-stage { position: relative; width: 100%; max-width: 1220px; aspect-ratio: 16 / 9; border: 4px solid #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
+.present-stage.anim-fade { animation: slideFade 0.45s ease; }
+.present-stage.anim-slide { animation: slideMove 0.4s ease; }
+.present-stage.anim-zoom { animation: slideZoom 0.4s ease; }
+@keyframes slideFade { from { opacity: 0.2; } to { opacity: 1; } }
+@keyframes slideMove { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideZoom { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+.present-controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; background: rgba(13, 17, 23, 0.85); border: 2px solid #fff; border-radius: 999px; padding: 6px 16px; color: #fff; font-family: 'Fredoka', sans-serif; }
+
+/* Carpetas y Google Drive */
+.cloud-card { background: #fff; border: 3px solid var(--ink); border-radius: 18px; padding: 22px 24px; box-shadow: 0 5px 0 var(--ink); margin-bottom: 18px; }
+.cloud-card h3 { font-family: 'Fredoka', sans-serif; font-size: 1.3rem; margin-bottom: 6px; }
+.cloud-card p { font-size: .92rem; font-weight: 700; color: #3A4C60; margin-bottom: 16px; line-height: 1.45; }
+.cloud-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cloud-input { flex: 1; min-width: 220px; background: #F8FAFC; border: 2.5px solid var(--ink); border-radius: 10px; padding: 7px 12px; font-weight: 700; font-size: .9rem; user-select: text; }
+.drive-status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; font-size: .82rem; }
+.btn-google-signin { background: #ffffff; border: 2.5px solid var(--ink); border-radius: 12px; padding: 9px 18px; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1rem; box-shadow: 0 3px 0 var(--ink); display: inline-flex; align-items: center; gap: 10px; transition: transform .08s, box-shadow .08s, background .12s; }
+.btn-google-signin:hover { background: #F8FAFC; }
+.btn-google-signin:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+
+/* Aviso */
+.aviso { position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 30px); opacity: 0; pointer-events: none;
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 12px; padding: 8px 16px; box-shadow: 0 4px 0 var(--ink);
+  font-weight: 800; font-size: .92rem; white-space: nowrap; transition: transform .22s ease, opacity .22s ease; z-index: 15; }
+.aviso.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Pie de la carcasa */
+.device-footer { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 8px 30px 2px; flex-shrink: 0; z-index: 25; }
+@media (min-width: 640px) { .device-footer { padding: 10px 48px 2px; } }
+.footer-left { display: flex; justify-content: flex-start; } .footer-right { display: flex; justify-content: flex-end; }
+.red-close-btn { width: 38px; height: 38px; border-radius: 50%; margin-left: 8px;
+  background: radial-gradient(circle at 35% 35%, #F26B66 0%, var(--led-red) 65%, #B8322D 100%);
+  border: 3px solid var(--ink); box-shadow: 0 0 0 5px var(--quipu-brown), 0 0 0 8px var(--ink); transition: transform .1s; }
+@media (min-width: 640px) { .red-close-btn { width: 42px; height: 42px; } }
+.red-close-btn:active { transform: scale(.93); }
+
+.quipu-plaque-svg { width: 132px; height: 40px; display: block; filter: drop-shadow(0 2px 0 var(--ink)); }
+@media (min-width: 640px) { .quipu-plaque-svg { width: 164px; height: 48px; } }
+
+.speaker-grille { display: flex; flex-direction: column; gap: 4px; width: 66px; padding: 3px 0; background: none; border: 0; }
+@media (min-width: 640px) { .speaker-grille { gap: 6px; width: 108px; } }
+.speaker-slot { height: 7px; width: 100%; background: var(--quipu-brown); border: 2.5px solid var(--ink); border-radius: 999px; transition: background-color .2s, box-shadow .2s; }
+@media (min-width: 640px) { .speaker-slot { height: 9px; border-width: 3px; } }
+.speaker-grille.speaking .speaker-slot { background: var(--led-green); box-shadow: 0 0 8px rgba(108,224,75,.85); }
+
+@media (max-width: 700px) {
+  .screen-display { flex-direction: column-reverse; }
+  .cajon { width: auto; flex-direction: row; align-items: center; border-right: 0; border-top: 2.5px solid var(--ink); padding: 6px 8px; gap: 4px; overflow-x: auto; }
+  .estado-sync { width: auto; padding: 5px 7px; } .estado-sync small { display: none; }
+  .cajon-sep { display: none; }
+  .cajon-btn { flex-direction: column; gap: 2px; font-size: .72rem; padding: 4px 8px; }
+  .cajon-btn svg { width: 22px; height: 22px; }
+  .principal { padding: 14px 14px 20px; }
+  .recibidor { gap: 10px; }
+  .tecla span:not(.gorro):not(.letra) { display: none; }
+  .tecla b { font-size: .74rem; }
+  .recientes { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .placa-programa { font-size: .95rem; padding: 3px 10px 4px; }
+  .device-header { gap: 12px; }
+  .qslide-workspace { grid-template-columns: 1fr; }
+  .qslide-thumbs { flex-direction: row; max-height: 96px; }
+}
+
+/* ===== IMPRESIÓN / EXPORTACIÓN A PDF MULTIPÁGINA REAL ===== */
+@media print {
+  @page { margin: 0; size: auto; }
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  .quipu-device {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+  .corner, .side-rail, .device-header, .device-footer, .cajon,
+  .mod-topbar, .mod-ribbon, .mod-statusbar, .aviso, .sheet-badge-bar {
+    display: none !important;
+  }
+  .screen-bezel, .screen-inner, .screen-display, #vista-texto, .qtext-desk {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+  #qtextPagesStack {
+    display: block !important;
+    width: 100% !important;
+  }
+  .qtext-sheet {
+    display: flex !important;
+    width: 100% !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .qtext-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<main class="quipu-device" aria-label="Quipu Office">
+
+  <!-- Esquineros metálicos -->
+  <svg class="corner corner-tl" viewBox="0 0 90 90" aria-hidden="true">
+    <defs><linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#B0BDCB"/><stop offset="100%" stop-color="#7B8999"/></linearGradient></defs>
+    <path d="M 32 2 L 82 2 C 86 2 88 4 88 8 L 88 22 C 88 26 86 28 82 28 L 42 28 C 32 28 28 32 28 42 L 28 82 C 28 86 26 88 22 88 L 8 88 C 4 88 2 86 2 82 L 2 32 C 2 14 14 2 32 2 Z" fill="url(#metal)" stroke="#0D1117" stroke-width="4" stroke-linejoin="round"/>
+  </svg>
+  <svg class="corner corner-tr" viewBox="0 0 90 90" aria-hidden="true"><path d="M 32 2 L 82 2 C 86 2 88 4 88 8 L 88 22 C 88 26 86 28 82 28 L 42 28 C 32 28 28 32 28 42 L 28 82 C 28 86 26 88 22 88 L 8 88 C 4 88 2 86 2 82 L 2 32 C 2 14 14 2 32 2 Z" fill="url(#metal)" stroke="#0D1117" stroke-width="4" stroke-linejoin="round"/></svg>
+  <svg class="corner corner-bl" viewBox="0 0 90 90" aria-hidden="true"><path d="M 32 2 L 82 2 C 86 2 88 4 88 8 L 88 22 C 88 26 86 28 82 28 L 42 28 C 32 28 28 32 28 42 L 28 82 C 28 86 26 88 22 88 L 8 88 C 4 88 2 86 2 82 L 2 32 C 2 14 14 2 32 2 Z" fill="url(#metal)" stroke="#0D1117" stroke-width="4" stroke-linejoin="round"/></svg>
+  <svg class="corner corner-br" viewBox="0 0 90 90" aria-hidden="true"><path d="M 32 2 L 82 2 C 86 2 88 4 88 8 L 88 22 C 88 26 86 28 82 28 L 42 28 C 32 28 28 32 28 42 L 28 82 C 28 86 26 88 22 88 L 8 88 C 4 88 2 86 2 82 L 2 32 C 2 14 14 2 32 2 Z" fill="url(#metal)" stroke="#0D1117" stroke-width="4" stroke-linejoin="round"/></svg>
+
+  <div class="side-rail side-rail-left"></div>
+  <div class="side-rail side-rail-right"></div>
+
+  <!-- Cabecera -->
+  <header class="device-header">
+    <div class="lens-outer" id="lente" aria-hidden="true"><div class="lens-glass"></div></div>
+    <div class="leds-group" aria-label="Luces de estado">
+      <span id="ledRojo" class="led led-red" title="Te necesita"></span>
+      <span id="ledAmarillo" class="led led-yellow" title="Trabajando"></span>
+      <span id="ledVerde" class="led led-green lit-green" title="Todo bien"></span>
+    </div>
+    <button class="placa-programa" id="btnPlacaOffice" type="button" title="Abrir el menú de programas (QuipuTexto, QuipuCálculo y QuipuDiapositivas)">
+      Quipu Office
+    </button>
+  </header>
+
+  <!-- Pantalla -->
+  <section class="screen-bezel">
+    <div class="screen-inner">
+      <div class="screen-display">
+
+        <!-- Cajón lateral -->
+        <nav class="cajon" aria-label="Cajón">
+          <button class="estado-sync" id="btnSync" type="button" title="Sincronizar con Google Drive">
+            <span class="punto" id="syncDot"></span>
+            <span><span id="syncTexto">Sincronizado</span><small id="syncHora">con Google Drive</small></span>
+          </button>
+          <div class="cajon-sep"></div>
+          <button class="cajon-btn" type="button" data-vista="inicio" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0D1117" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8v10H15v-6H9v6H3z" fill="#98CEFA"/></svg>
+            Inicio
+          </button>
+          <button class="cajon-btn" type="button" data-vista="carpetas">
+            <svg viewBox="0 0 24 24" stroke="#0D1117" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z" fill="#F4C430"/></svg>
+            Carpetas
+          </button>
+          <button class="cajon-btn" type="button" data-vista="drive">
+            <svg viewBox="0 0 24 24" stroke="#0D1117" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 19a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 10z" fill="#98CEFA"/></svg>
+            Drive
+          </button>
+        </nav>
+
+        <!-- VISTA INICIO -->
+        <div class="principal vista activa" id="vista-inicio">
+          <div class="saludo">
+            <h1 class="titulo-office">Quipu Office</h1>
+          </div>
+
+          <h2 class="seccion-titulo">Mis documentos</h2>
+          <div class="recientes" id="recientes"></div>
+        </div>
+
+        <!-- VISTA RECIBIDOR / LANZADOR -->
+        <div class="principal vista" id="vista-recibidor">
+          <div class="modulo-cabecera">
+            <h1 class="titulo-office" style="font-size: clamp(1.6rem, 3vw, 2.2rem);">Programas de Quipu Office</h1>
+            <button class="btn-volver-office" type="button" data-vista="inicio">← Volver a mis documentos</button>
+          </div>
+
+          <div class="recibidor-panel">
+            <div class="recibidor-intro">
+              <h2>Elegí qué querés crear</h2>
+              <p>Todos tus archivos se guardan juntos en tus carpetas y se sincronizan con Drive</p>
+            </div>
+
+            <div class="recibidor">
+              <button class="tecla" type="button" data-abrir="texto" data-programa="QuipuTexto">
+                <span class="gorro"><span class="letra">T</span></span>
+                <b>QuipuTexto</b><span>Documento nuevo</span>
+              </button>
+              <button class="tecla tecla-calculo" type="button" data-abrir="calculo" data-programa="QuipuCálculo">
+                <span class="gorro"><span class="letra">C</span></span>
+                <b>QuipuCálculo</b><span>Planilla nueva</span>
+              </button>
+              <button class="tecla tecla-diapo" type="button" data-abrir="diapo" data-programa="QuipuDiapositivas">
+                <span class="gorro"><span class="letra">D</span></span>
+                <b>QuipuDiapositivas</b><span>Presentación nueva</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA CARPETAS -->
+        <div class="principal vista" id="vista-carpetas">
+          <div class="modulo-cabecera">
+            <h1 class="titulo-office" style="font-size: clamp(1.6rem, 3vw, 2.2rem);">Mis Carpetas</h1>
+            <button class="btn-volver-office" type="button" data-vista="inicio">← Volver a Inicio</button>
+          </div>
+
+          <div class="cloud-card">
+            <h3>Crear nueva carpeta</h3>
+            <div class="cloud-row">
+              <input type="text" id="newFolderName" class="cloud-input" placeholder="Nombre de la carpeta (ej: Universidad, Proyectos…)">
+              <button type="button" class="q-btn q-btn-save" id="btnCreateFolder">+ Crear carpeta</button>
+            </div>
+          </div>
+
+          <h2 class="seccion-titulo">Carpetas guardadas</h2>
+          <div class="recientes" id="foldersGrid"></div>
+        </div>
+
+        <!-- VISTA GOOGLE DRIVE -->
+        <div class="principal vista" id="vista-drive">
+          <div class="modulo-cabecera">
+            <h1 class="titulo-office" style="font-size: clamp(1.6rem, 3vw, 2.2rem);">Google Drive</h1>
+            <button class="btn-volver-office" type="button" data-vista="inicio">← Volver a Inicio</button>
+          </div>
+
+          <div class="cloud-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+              <h3>Sincronización en la nube</h3>
+              <span class="drive-status-pill" id="driveStatusPill" style="background:#FEF9C3;">🟡 Sin sesión iniciada</span>
+            </div>
+            <p id="driveUserDescription">Iniciá sesión con tu cuenta de Google para guardar y sincronizar automáticamente todos tus documentos, planillas y presentaciones de Quipu Office en tu Google Drive.</p>
+
+            <div class="cloud-row" style="margin-bottom:14px;">
+              <button type="button" class="btn-google-signin" id="btnGoogleSignIn">
+                <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span id="btnGoogleSignInLabel">Iniciar sesión con Google</span>
+              </button>
+
+              <button type="button" class="q-btn q-btn-save" id="btnDriveUploadNow" style="display:none;">☁️ Subir cambios a Drive ahora</button>
+            </div>
+
+            <div class="cloud-row" style="padding-top:12px;border-top:2px solid #E2E8F0;">
+              <button type="button" class="q-btn q-btn-doc" id="btnDriveBackupDownload">📥 Descargar copia de seguridad (.quipu.json)</button>
+              <button type="button" class="q-btn q-btn-pdf" id="btnDriveBackupImport">📂 Abrir copia desde mi PC / Drive</button>
+              <input type="file" id="driveImportInput" accept=".json" hidden>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA 1: QUIPUTEXTO -->
+        <div class="principal vista" id="vista-texto">
+          <div class="mod-topbar">
+            <span class="pildora-mod mod-texto">T • QuipuTexto</span>
+            <input type="text" id="qtextTitle" class="mod-title-input" value="Documento sin título" aria-label="Nombre del documento">
+            <div class="mod-actions">
+              <select class="rib-select" id="qtextTemplates" title="Elegir formato o hoja en blanco">
+                <option value="">📋 Formato…</option>
+                <option value="blanco">📄 Sin formato (Hoja en blanco)</option>
+                <option value="informe">📑 Informe / TP</option>
+                <option value="carta">✉️ Carta Formal</option>
+                <option value="cv">🪪 Currículum</option>
+              </select>
+              <button type="button" class="q-btn q-btn-save" id="btnQtextSave" title="Guardar documento">💾 Guardar</button>
+              <button type="button" class="q-btn q-btn-doc" id="btnQtextDoc" title="Descargar documento (.doc)">📥 .DOC</button>
+              <button type="button" class="q-btn q-btn-pdf" id="btnQtextPdf" title="Guardar o imprimir como PDF">📄 .PDF</button>
+              <button type="button" class="btn-volver-office" data-vista="inicio">← Salir</button>
+            </div>
+          </div>
+
+          <div class="mod-ribbon" role="toolbar" aria-label="Herramientas de formato">
+            <div class="ribbon-group">
+              <select class="rib-select" id="ribFont" title="Tipo de letra">
+                <option value="Nunito, sans-serif">Nunito</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Times New Roman', serif">Times</option>
+                <option value="'Courier New', monospace">Courier</option>
+              </select>
+              <select class="rib-select" id="ribSize" title="Tamaño de texto">
+                <option value="2">Chica</option>
+                <option value="3" selected>Normal</option>
+                <option value="4">Mediana</option>
+                <option value="5">Subtítulo</option>
+                <option value="6">Título</option>
+              </select>
+              <select class="rib-select" id="ribLineHeight" title="Interlineado">
+                <option value="1.2">1.0</option>
+                <option value="1.5" selected>1.5</option>
+                <option value="2.0">2.0</option>
+              </select>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" data-cmd="bold" title="Negrita"><b style="font-weight:900;">N</b></button>
+              <button type="button" class="rib-tool" data-cmd="italic" title="Cursiva"><i style="font-family:Georgia,serif;">K</i></button>
+              <button type="button" class="rib-tool" data-cmd="underline" title="Subrayado"><u>S</u></button>
+              <button type="button" class="rib-tool" data-cmd="strikeThrough" title="Tachado"><s>T</s></button>
+            </div>
+
+            <div class="ribbon-group">
+              <input type="color" id="ribTextColor" class="rib-color" value="#0D1117" title="Color de letra">
+              <button type="button" class="rib-tool" id="btnHighlight" title="Resaltar en amarillo">🖍️</button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" data-cmd="justifyLeft" title="Alinear a la izquierda">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="7" x2="10" y2="7"/><line x1="1" y1="12" x2="13" y2="12"/></svg>
+              </button>
+              <button type="button" class="rib-tool" data-cmd="justifyCenter" title="Centrar">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="3.5" y1="7" x2="12.5" y2="7"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+              </button>
+              <button type="button" class="rib-tool" data-cmd="justifyRight" title="Alinear a la derecha">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="7" x2="15" y2="7"/><line x1="3" y1="12" x2="15" y2="12"/></svg>
+              </button>
+              <button type="button" class="rib-tool" data-cmd="justifyFull" title="Justificar">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+              </button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" data-cmd="outdent" title="Disminuir sangría">⇤ Sangría</button>
+              <button type="button" class="rib-tool" data-cmd="indent" title="Aumentar sangría">⇥ Sangría</button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" data-cmd="insertUnorderedList" title="Lista con viñetas">• Lista</button>
+              <button type="button" class="rib-tool" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>
+            </div>
+
+            <div class="ribbon-group">
+              <div class="table-picker-wrap">
+                <button type="button" class="rib-tool" id="btnInsertTable" title="Elegir columnas y filas">⊞ Tabla</button>
+                <div class="table-popover" id="tablePopover">
+                  <div class="table-popover-label" id="tablePopoverLabel">3 columnas × 3 filas</div>
+                  <div class="table-grid-selector" id="tableGridSelector"></div>
+                </div>
+              </div>
+
+              <button type="button" class="rib-tool" id="btnInsertImage" title="Insertar imagen">🖼️ Img</button>
+              <input type="file" id="qtextImgInput" accept="image/*" hidden>
+
+              <button type="button" class="rib-tool" id="btnAddPage" title="Agregar una nueva página en blanco debajo">📄 + Página</button>
+              <button type="button" class="rib-tool" id="btnOrientation" title="Cambiar orientación Vertical / Horizontal">📐 Vertical</button>
+              <button type="button" class="rib-tool" id="btnToggleHeader" title="Mostrar u ocultar encabezado">⬆️ Encab.</button>
+              <button type="button" class="rib-tool" id="btnToggleFooter" title="Mostrar u ocultar pie de página">⬇️ Pie</button>
+              <button type="button" class="rib-tool" id="btnTogglePageNum" title="Numerar páginas automáticamente">🔢 N.º Pág.</button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" id="btnDictate" title="Dictar por voz">🎤 Dictar</button>
+              <button type="button" class="rib-tool" id="btnReadAloud" title="Leer o detener lectura en voz alta">🔊 Leer</button>
+            </div>
+          </div>
+
+          <div class="qtext-desk" id="qtextDesk">
+            <div id="qtextPagesStack" class="qtext-pages-stack"></div>
+          </div>
+
+          <div class="mod-statusbar">
+            <span id="qtextStats">0 palabras • 1 página</span>
+
+            <div class="zoom-controls" aria-label="Zoom de la hoja">
+              <button type="button" class="zoom-btn" id="btnZoomOut" title="Alejar hoja">−</button>
+              <span class="zoom-value" id="zoomValue">100%</span>
+              <button type="button" class="zoom-btn" id="btnZoomIn" title="Acercar hoja">+</button>
+              <button type="button" class="zoom-btn" id="btnZoomWidth" title="Ajustar al ancho de pantalla">↔ Ancho</button>
+            </div>
+
+            <span id="qtextSavedState">Sin guardar</span>
+          </div>
+        </div>
+
+        <!-- VISTA 2: QUIPUCÁLCULO -->
+        <div class="principal vista" id="vista-calculo">
+          <div class="mod-topbar">
+            <span class="pildora-mod mod-calculo">C • QuipuCálculo</span>
+            <input type="text" id="qcalcTitle" class="mod-title-input" value="Planilla sin título" aria-label="Nombre de la planilla">
+            <div class="mod-actions">
+              <button type="button" class="q-btn q-btn-save" id="btnQcalcSave" title="Guardar planilla">💾 Guardar</button>
+              <button type="button" class="q-btn q-btn-xls" id="btnQcalcXls" title="Descargar archivo para Excel (.xls)">📊 .XLS</button>
+              <button type="button" class="btn-volver-office" data-vista="inicio">← Salir</button>
+            </div>
+          </div>
+
+          <div class="mod-ribbon" role="toolbar" aria-label="Herramientas de celda">
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" id="btnCalcBold" title="Negrita"><b style="font-weight:900;">N</b></button>
+              <button type="button" class="rib-tool" id="btnCalcItalic" title="Cursiva"><i style="font-family:Georgia,serif;">K</i></button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" data-calc-align="left" title="Alinear a la izquierda">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="7" x2="10" y2="7"/><line x1="1" y1="12" x2="13" y2="12"/></svg>
+              </button>
+              <button type="button" class="rib-tool" data-calc-align="center" title="Centrar">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="3.5" y1="7" x2="12.5" y2="7"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+              </button>
+              <button type="button" class="rib-tool" data-calc-align="right" title="Alinear a la derecha">
+                <svg width="15" height="13" viewBox="0 0 16 14" stroke="#0D1117" stroke-width="2" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="7" x2="15" y2="7"/><line x1="3" y1="12" x2="15" y2="12"/></svg>
+              </button>
+            </div>
+
+            <div class="ribbon-group">
+              <input type="color" id="calcTextColor" class="rib-color" value="#0D1117" title="Color de texto">
+              <input type="color" id="calcBgColor" class="rib-color" value="#FEF08A" title="Color de relleno de celda">
+              <button type="button" class="rib-tool" id="btnCalcFill" title="Pintar fondo de celda">🎨 Relleno</button>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" id="btnCalcCurrency" title="Formato moneda ($)">$ Moneda</button>
+              <button type="button" class="rib-tool" id="btnCalcPercent" title="Formato porcentaje (%)">% Porc.</button>
+              <button type="button" class="rib-tool" id="btnCalcAutoSum" title="Sumar automáticamente los números de arriba">Σ Autosuma</button>
+              <select class="rib-select" id="calcFormulaPicker" title="Aplicar fórmula automática">
+                <option value="">ƒx Fórmulas…</option>
+                <option value="SUMA">SUMA</option>
+                <option value="PROMEDIO">PROMEDIO</option>
+                <option value="MAX">MAX</option>
+                <option value="MIN">MIN</option>
+                <option value="CONTAR">CONTAR</option>
+                <option value="SI">SI</option>
+              </select>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" id="btnCalcSortAsc" title="Ordenar columna A → Z">↑ A-Z</button>
+              <button type="button" class="rib-tool" id="btnCalcChart" title="Generar gráfico profesional con los datos">📈 Gráfico</button>
+              <button type="button" class="rib-tool" id="btnCalcClear" title="Borrar selección">🧹 Borrar</button>
+            </div>
+          </div>
+
+          <div class="qcalc-formulabar">
+            <span class="qcalc-cell-ref" id="qcalcCellRef">A1</span>
+            <span class="qcalc-fx-badge">fx</span>
+            <input type="text" id="qcalcFxInput" class="qcalc-fx-input" placeholder="Escribí un valor o fórmula (ej: =SUMA(B2:B5))" aria-label="Barra de fórmulas">
+          </div>
+
+          <div class="qcalc-workspace">
+            <div class="qcalc-grid-wrap">
+              <table class="qcalc-table" id="qcalcTable"></table>
+            </div>
+
+            <aside class="qcalc-chart-panel" id="qcalcChartPanel">
+              <div class="qcalc-chart-header">
+                <input type="text" id="qcalcChartTitle" class="qcalc-chart-title-input" value="Gráfico de datos" title="Clic para editar el título del gráfico">
+                <button type="button" class="zoom-btn" id="btnDownloadChart" title="Descargar gráfico como imagen PNG">📥 PNG</button>
+                <button type="button" class="zoom-btn" id="btnCloseChart" title="Cerrar gráfico">✕</button>
+              </div>
+              <div class="chart-type-tabs">
+                <button type="button" class="chart-type-btn activo" data-chart-type="bar">📊 Barras</button>
+                <button type="button" class="chart-type-btn" data-chart-type="line">📈 Líneas</button>
+                <button type="button" class="chart-type-btn" data-chart-type="pie">🥧 Torta</button>
+              </div>
+              <div class="qcalc-chart-canvas" id="qcalcChartCanvas"></div>
+            </aside>
+          </div>
+
+          <div class="qcalc-sheets-bar" id="qcalcSheetsBar"></div>
+
+          <div class="mod-statusbar">
+            <span id="qcalcSummary"></span>
+            <span id="qcalcSavedState">Sin guardar</span>
+          </div>
+        </div>
+
+        <!-- VISTA 3: QUIPUDIAPOSITIVAS -->
+        <div class="principal vista" id="vista-diapo">
+          <div class="mod-topbar">
+            <span class="pildora-mod mod-diapo">D • QuipuDiapositivas</span>
+            <input type="text" id="qslideTitle" class="mod-title-input" value="Presentación sin título" aria-label="Nombre de la presentación">
+            <div class="mod-actions">
+              <button type="button" class="q-btn q-btn-present" id="btnSlidePresent" title="Exponer presentación a pantalla completa">▶️ Presentar</button>
+              <button type="button" class="q-btn q-btn-save" id="btnQslideSave" title="Guardar presentación">💾 Guardar</button>
+              <button type="button" class="q-btn q-btn-pdf" id="btnQslidePptx" title="Descargar archivo PowerPoint real (.pptx)">📥 .PPTX</button>
+              <button type="button" class="btn-volver-office" data-vista="inicio">← Salir</button>
+            </div>
+          </div>
+
+          <div class="mod-ribbon" role="toolbar" aria-label="Herramientas de diapositiva">
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool" id="btnSlideAdd" title="Nueva diapositiva (+)">+</button>
+              <button type="button" class="rib-tool" id="btnSlideDup" title="Duplicar diapositiva">⧉</button>
+              <button type="button" class="rib-tool" id="btnSlideDel" title="Eliminar diapositiva">🗑️</button>
+              <button type="button" class="rib-tool" id="btnSlideUndo" title="Deshacer cambio">↶</button>
+              <button type="button" class="rib-tool" id="btnSlideRedo" title="Rehacer cambio">↷</button>
+            </div>
+
+            <div class="ribbon-group">
+              <select class="rib-select" id="slideZoomSelect" title="Zoom de la diapositiva">
+                <option value="fit" selected>🔍 Ajustar</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+                <option value="120">120%</option>
+              </select>
+            </div>
+
+            <div class="ribbon-group">
+              <button type="button" class="rib-tool activo" id="btnSlideSelectTool" title="Seleccionar y mover objetos">↖</button>
+              <button type="button" class="rib-tool" id="btnSlideAddText" title="Cuadro de texto (Tt)"><b>Tₜ</b></button>
+              <button type="button" class="rib-tool" id="btnSlideInsertImg" title="Insertar imagen">🖼️</button>
+              <input type="file" id="qslideImgInput" accept="image/*" hidden>
+
+              <select class="rib-select" id="slideShapeSelect" title="Insertar forma">
+                <option value="">○□ Formas</option>
+                <option value="rect">▭ Rectángulo</option>
+                <option value="round">▢ Tarjeta</option>
+                <option value="circle">⚪ Círculo</option>
+              </select>
+
+              <button type="button" class="rib-tool" id="btnSlideAddLine" title="Insertar línea separadora">╲</button>
+              <button type="button" class="rib-tool" id="btnSlideComments" title="Comentarios de revisión">💬</button>
+            </div>
+
+            <div class="ribbon-group">
+              <label class="rib-tool" title="Color de fondo de esta diapositiva" style="cursor:pointer;">
+                Fondo <input type="color" id="slideBgColorPicker" value="#ffffff" style="width:18px;height:18px;border:none;background:none;cursor:pointer;">
+              </label>
+
+              <select class="rib-select" id="slideLayoutSelect" title="Cambiar diseño de diapositiva">
+                <option value="">Diseño</option>
+                <option value="portada">Portada</option>
+                <option value="titulo_texto">Título y texto</option>
+                <option value="dos_columnas">Dos columnas</option>
+                <option value="blanco">En blanco</option>
+              </select>
+
+              <select class="rib-select" id="slideThemeSelect" title="Tema visual">
+                <option value="light">Tema: Claro</option>
+                <option value="quipu">Tema: Azul Quipu</option>
+                <option value="dark">Tema: Oscuro</option>
+                <option value="warm">Tema: Cálido</option>
+              </select>
+
+              <select class="rib-select" id="slideTransitionSelect" title="Transición">
+                <option value="none">Transición: Ninguna</option>
+                <option value="fade">Transición: Fundido</option>
+                <option value="slide">Transición: Deslizar</option>
+                <option value="zoom">Transición: Zoom</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="qslide-contextual-bar" id="qslideContextualBar">
+            <strong style="font-family:'Fredoka',sans-serif;font-size:.82rem;">Objeto seleccionado:</strong>
+            <select class="rib-select" style="height:30px;" id="slideFontSize" title="Tamaño de letra">
+              <option value="18">18 px</option>
+              <option value="24" selected>24 px</option>
+              <option value="32">32 px</option>
+              <option value="42">42 px</option>
+            </select>
+            <button type="button" class="rib-tool" style="height:30px;" data-slide-cmd="bold"><b>N</b></button>
+            <button type="button" class="rib-tool" style="height:30px;" data-slide-cmd="italic"><i>K</i></button>
+            <button type="button" class="rib-tool" style="height:30px;" data-slide-cmd="underline"><u>S</u></button>
+            <input type="color" id="slideTextColor" class="rib-color" style="height:30px;width:30px;" value="#0D1117" title="Color de texto">
+            <input type="color" id="slideFillColor" class="rib-color" style="height:30px;width:30px;" value="#FDE047" title="Color de relleno de forma">
+            <button type="button" class="rib-tool" style="height:30px;background:#FCA5A5;" id="btnDeleteSelectedSlideItem">🗑️ Eliminar objeto</button>
+          </div>
+
+          <div class="qslide-workspace" id="qslideWorkspace">
+            <aside class="qslide-thumbs" id="qslideThumbs" title="Arrastrá las diapositivas o usá ▲▼ para reordenarlas"></aside>
+
+            <div class="qslide-stage-wrap" id="qslideStageWrap">
+              <div class="qslide-canvas" id="qslideCanvas"></div>
+
+              <div class="qslide-notes-box" id="qslideNotesBox">
+                <strong style="font-family:'Fredoka',sans-serif;font-size:.82rem;">🗒️ Notas:</strong>
+                <input type="text" id="qslideNotesInput" class="qslide-notes-input" placeholder="Escribí acá tus apuntes o guion para exponer esta diapositiva…">
+              </div>
+            </div>
+
+            <aside class="qslide-comments-panel" id="qslideCommentsPanel">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong style="font-family:'Fredoka',sans-serif;">💬 Comentarios</strong>
+                <button type="button" class="zoom-btn" id="btnCloseComments">✕</button>
+              </div>
+              <div id="slideCommentsList" style="flex:1;display:flex;flex-direction:column;gap:6px;font-size:.82rem;"></div>
+              <div style="display:flex;gap:4px;">
+                <input type="text" id="newSlideCommentInput" class="cloud-input" style="min-width:0;padding:4px 8px;font-size:.8rem;" placeholder="Agregar comentario…">
+                <button type="button" class="q-btn q-btn-save" style="padding:4px 8px;" id="btnAddSlideComment">+</button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="mod-statusbar">
+            <span id="qslideStats">Diapositiva 1 de 1</span>
+            <span id="qslideSavedState">Sin guardar</span>
+          </div>
+        </div>
+
+        <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pie -->
+  <footer class="device-footer">
+    <div class="footer-left">
+      <button class="red-close-btn" id="btnCerrar" type="button" title="Cerrar Quipu Office" aria-label="Cerrar Quipu Office"></button>
+    </div>
+    <div class="footer-center">
+      <svg class="quipu-plaque-svg" viewBox="0 0 220 68" aria-label="Quipu">
+        <rect x="4" y="4" width="212" height="60" rx="14" fill="#5D94CE" stroke="#0D1117" stroke-width="4.5"/>
+        <rect x="11" y="11" width="198" height="46" rx="10" fill="#67A1DC" stroke="#0D1117" stroke-width="3"/>
+        <text x="112" y="47" text-anchor="middle" font-family="'Fredoka', sans-serif" font-weight="700" font-size="38" fill="#0D1117">Quipu</text>
+        <text x="110" y="44" text-anchor="middle" font-family="'Fredoka', sans-serif" font-weight="700" font-size="38" fill="#7AB4EB" stroke="#0D1117" stroke-width="2.5" paint-order="stroke fill">Quipu</text>
+      </svg>
+    </div>
+    <div class="footer-right">
+      <button class="speaker-grille" id="parlante" type="button" aria-label="Parlante">
+        <span class="speaker-slot"></span><span class="speaker-slot"></span><span class="speaker-slot"></span><span class="speaker-slot"></span>
+      </button>
+    </div>
+  </footer>
+</main>
+
+<!-- OVERLAY DE PRESENTACIÓN A PANTALLA COMPLETA -->
+<div class="present-overlay" id="presentOverlay">
+  <div class="present-stage" id="presentStage"></div>
+  <div class="present-controls">
+    <button type="button" class="zoom-btn" style="color:#0D1117;" id="btnPresPrev">◀ Anterior</button>
+    <span id="presentCounter">1 / 1</span>
+    <button type="button" class="zoom-btn" style="color:#0D1117;" id="btnPresNext">Siguiente ▶</button>
+    <button type="button" class="zoom-btn" style="background:#FCA5A5;color:#0D1117;" id="btnPresExit">✕ Salir (ESC)</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const STORAGE_KEY = 'quipu_office_docs_v11';
+
+  const GOOGLE_CLIENT_ID = 'TU_CLIENT_ID_DE_GOOGLE_AQUI.apps.googleusercontent.com';
+  const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  let googleAccessToken = null;
+  let tokenClient = null;
+
+  const DOCS_INICIALES = [
+    {
+      id: 'doc-1',
+      nombre: 'Apuntes de Historia',
+      tipo: 'texto',
+      cuando: 'Hoy, 10:42',
+      paginas: [
+        '<h2>Revolución Industrial</h2><p>La <b>Revolución Industrial</b> fue un proceso de profundas transformaciones económicas, sociales y tecnológicas que comenzó en Gran Bretaña en el siglo XVIII.</p><ul><li>Invención de la máquina de vapor</li><li>Crecimiento de las ciudades industriales</li><li>Nuevos medios de transporte: ferrocarril y barco a vapor</li></ul>'
+      ]
+    },
+    {
+      id: 'doc-2',
+      nombre: 'Gastos del mes',
+      tipo: 'calculo',
+      cuando: 'Hoy, 09:15',
+      hojas: [
+        {
+          nombre: 'Noviembre',
+          celdas: {
+            A1: { raw: 'Concepto', bold: true, bg: '#DCEEF8' },
+            B1: { raw: 'Monto', bold: true, bg: '#DCEEF8', align: 'right' },
+            A2: { raw: 'Alquiler' },
+            B2: { raw: '350000', fmt: 'currency', align: 'right' },
+            A3: { raw: 'Supermercado' },
+            B3: { raw: '125000', fmt: 'currency', align: 'right' },
+            A4: { raw: 'Servicios e Internet' },
+            B4: { raw: '48500', fmt: 'currency', align: 'right' },
+            A5: { raw: 'TOTAL', bold: true, bg: '#FEF08A' },
+            B5: { raw: '=SUMA(B2:B4)', bold: true, bg: '#FEF08A', fmt: 'currency', align: 'right' }
+          }
+        }
+      ]
+    },
+    { id: 'doc-3', nombre: 'Facultad', tipo: 'carpeta', cuando: '12 archivos' },
+    {
+      id: 'doc-4',
+      nombre: 'Exposición final',
+      tipo: 'diapo',
+      cuando: 'Ayer',
+      slides: [
+        {
+          tema: 'quipu',
+          transicion: 'fade',
+          notas: 'Saludar al jurado y presentar los objetivos del trabajo.',
+          comentarios: [],
+          items: [
+            { id: 'el-1', type: 'text', x: 8, y: 20, w: 84, h: 20, fontSize: 40, color: '#FFFFFF', text: '<b>Proyecto Integrador 2026</b>' },
+            { id: 'el-2', type: 'text', x: 8, y: 44, w: 80, h: 22, fontSize: 22, color: '#E2E8F0', text: 'Presentación general de resultados, análisis de datos y conclusiones del equipo.' }
+          ]
+        },
+        {
+          tema: 'light',
+          transicion: 'slide',
+          notas: 'Destacar los tres pilares principales.',
+          comentarios: [],
+          items: [
+            { id: 'el-3', type: 'text', x: 7, y: 10, w: 86, h: 16, fontSize: 34, color: '#0D1117', text: '<b>Objetivos Principales</b>' },
+            { id: 'el-4', type: 'text', x: 7, y: 30, w: 86, h: 48, fontSize: 22, color: '#1E293B', text: '<ul><li>Optimizar los tiempos de gestión diaria</li><li>Unificar documentos, planillas y presentaciones</li><li>Exportar en formatos universales (.DOC, .XLS y .PPTX)</li></ul>' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'doc-5',
+      nombre: 'Trabajo práctico 2',
+      tipo: 'texto',
+      cuando: 'Ayer',
+      paginas: [
+        '<h2>Trabajo Práctico N.º 2</h2><p>Completar el desarrollo en la página siguiente y exportar el archivo final en formato <b>.DOC</b> o <b>.PDF</b>.</p>',
+        '<h3>Desarrollo</h3><p>Escribí acá la segunda hoja del trabajo práctico…</p>'
+      ]
+    },
+    {
+      id: 'doc-6',
+      nombre: 'Presupuesto',
+      tipo: 'calculo',
+      cuando: 'Lunes',
+      hojas: [
+        {
+          nombre: 'Materiales',
+          celdas: {
+            A1: { raw: 'Ítem', bold: true, bg: '#DCFCE7' },
+            B1: { raw: 'Cantidad', bold: true, bg: '#DCFCE7', align: 'center' },
+            C1: { raw: 'Precio Unit.', bold: true, bg: '#DCFCE7', align: 'right' },
+            D1: { raw: 'Subtotal', bold: true, bg: '#DCFCE7', align: 'right' },
+            A2: { raw: 'Cuadernos A4' },
+            B2: { raw: '4', align: 'center' },
+            C2: { raw: '4500', fmt: 'currency', align: 'right' },
+            D2: { raw: '=B2*C2', fmt: 'currency', align: 'right' },
+            A3: { raw: 'Marcadores' },
+            B3: { raw: '2', align: 'center' },
+            C3: { raw: '3200', fmt: 'currency', align: 'right' },
+            D3: { raw: '=B3*C3', fmt: 'currency', align: 'right' },
+            C4: { raw: 'Total General', bold: true, align: 'right' },
+            D4: { raw: '=SUMA(D2:D3)', bold: true, bg: '#FEF08A', fmt: 'currency', align: 'right' }
+          }
+        }
+      ]
+    },
+    {
+      id: 'doc-7',
+      nombre: 'Charla de bienvenida',
+      tipo: 'diapo',
+      cuando: '14 nov.',
+      slides: [
+        {
+          tema: 'warm',
+          transicion: 'zoom',
+          notas: 'Bienvenida inicial.',
+          comentarios: [],
+          items: [
+            { id: 'el-10', type: 'text', x: 10, y: 24, w: 80, h: 20, fontSize: 38, color: '#0D1117', text: '<b>¡Bienvenidos a Quipu Office!</b>' },
+            { id: 'el-11', type: 'text', x: 10, y: 48, w: 80, h: 20, fontSize: 22, color: '#334155', text: 'Tu suite de productividad todo en uno: Texto, Cálculo y Diapositivas.' }
+          ]
+        }
+      ]
+    },
+    { id: 'doc-8', nombre: 'Recetas', tipo: 'carpeta', cuando: '5 archivos' }
+  ];
+
+  let documentos = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DOCS_INICIALES;
+  let docActivoId = null;
+
+  const EXT = { texto: '.qtext', calculo: '.qcalc', diapo: '.pptx' };
+
+  function icono(tipo) {
+    if (tipo === 'carpeta') {
+      return `<svg viewBox="0 0 58 72" aria-hidden="true"><path d="M3 22a4 4 0 0 1 4-4h14l5 5h25a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z" fill="#F4C430" stroke="#0D1117" stroke-width="3" stroke-linejoin="round"/><path d="M3 30h52" stroke="#C7951A" stroke-width="3"/></svg>`;
+    }
+    const dentro = {
+      texto:   `<path d="M13 26h28M13 33h32M13 40h24M13 47h30" stroke="#4D74B0" stroke-width="3" stroke-linecap="round"/>`,
+      calculo: `<rect x="12" y="24" width="34" height="26" rx="2" fill="#E3F5DD" stroke="#3A8A2A" stroke-width="2.5"/><path d="M12 32.5h34M12 41h34M23 24v26M35 24v26" stroke="#3A8A2A" stroke-width="2.5"/>`,
+      diapo:   `<rect x="11" y="25" width="36" height="24" rx="3" fill="#FFF3C9" stroke="#C7951A" stroke-width="2.5"/><path d="M25 31v12l10-6z" fill="#C7951A"/>`
+    }[tipo];
+    return `<svg viewBox="0 0 58 72" aria-hidden="true">
+      <path d="M6 4h32l14 14v46a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="#fff" stroke="#0D1117" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M38 4v10a4 4 0 0 0 4 4h10" fill="#E8F4FA" stroke="#0D1117" stroke-width="3" stroke-linejoin="round"/>${dentro}</svg>`;
+  }
+
+  const lista = document.getElementById('recientes');
+  const foldersGrid = document.getElementById('foldersGrid');
+
+  function renderRecientes() {
+    lista.innerHTML = documentos.map(a => `
+      <button class="archivo" type="button" data-id="${a.id}" data-nombre="${a.nombre}" data-tipo="${a.tipo}">
+        <span class="hoja">${icono(a.tipo)}${a.tipo !== 'carpeta' ? `<span class="etiqueta et-${a.tipo}">${EXT[a.tipo]}</span>` : ''}</span>
+        <b>${a.nombre}</b><small>${a.cuando}</small>
+      </button>`).join('');
+
+    const soloCarpetas = documentos.filter(d => d.tipo === 'carpeta');
+    foldersGrid.innerHTML = soloCarpetas.length
+      ? soloCarpetas.map(c => `
+          <button class="archivo" type="button" data-folder-id="${c.id}" data-nombre="${c.nombre}">
+            <span class="hoja">${icono('carpeta')}</span>
+            <b>${c.nombre}</b><small>${c.cuando}</small>
+          </button>`).join('')
+      : '<p style="font-weight:700;color:#3A4C60;">Todavía no creaste carpetas.</p>';
+  }
+  renderRecientes();
+
+  /* ===== Luces y parlante ===== */
+  const ledRojo = document.getElementById('ledRojo');
+  const ledAmarillo = document.getElementById('ledAmarillo');
+  const ledVerde = document.getElementById('ledVerde');
+  const lente = document.getElementById('lente');
+  const parlante = document.getElementById('parlante');
+  const aviso = document.getElementById('aviso');
+  const leds = { rojo: ledRojo, amarillo: ledAmarillo, verde: ledVerde };
+
+  function apagarLeds() {
+    ledRojo.classList.remove('lit-red');
+    ledAmarillo.classList.remove('lit-yellow');
+    ledVerde.classList.remove('lit-green');
+  }
+  function prender(cual) {
+    apagarLeds();
+    const clase = { rojo: 'lit-red', amarillo: 'lit-yellow', verde: 'lit-green' }[cual];
+    leds[cual].classList.add(clase);
+  }
+  const esperar = ms => new Promise(r => setTimeout(r, ms));
+  async function procesando() {
+    for (const c of ['rojo', 'amarillo', 'verde']) { prender(c); await esperar(180); }
+  }
+
+  let avisoTimer;
+  function hablar(texto) {
+    aviso.textContent = texto;
+    aviso.classList.add('visible');
+    lente.classList.add('pulso');
+    parlante.classList.add('speaking');
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(() => {
+      aviso.classList.remove('visible');
+      lente.classList.remove('pulso');
+      parlante.classList.remove('speaking');
+    }, 2200);
+  }
+
+  /* ===== Navegación entre vistas ===== */
+  const btnPlacaOffice = document.getElementById('btnPlacaOffice');
+  let vistaActual = 'inicio';
+
+  function abrirVista(nombreVista, etiquetaPlaca = 'Quipu Office') {
+    vistaActual = nombreVista;
+    document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+    const destino = document.getElementById(`vista-${nombreVista}`);
+    if (destino) destino.classList.add('activa');
+
+    btnPlacaOffice.textContent = etiquetaPlaca;
+    btnPlacaOffice.classList.toggle('abierto', nombreVista === 'recibidor');
+
+    document.querySelectorAll('.cajon-btn[data-vista]').forEach(btn => {
+      if (btn.dataset.vista === nombreVista) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
+    });
+  }
+
+  btnPlacaOffice.addEventListener('click', async () => {
+    await procesando();
+    if (vistaActual === 'recibidor') abrirVista('inicio', 'Quipu Office');
+    else {
+      abrirVista('recibidor', 'Quipu Office');
+      hablar('Elegí un programa');
+    }
+  });
+
+  document.querySelectorAll('[data-vista]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      detenerLectura();
+      await procesando();
+      abrirVista(btn.dataset.vista, 'Quipu Office');
+    });
+  });
+
+  /* ===== CARPETAS Y GOOGLE DRIVE ===== */
+  document.getElementById('btnCreateFolder').addEventListener('click', () => {
+    const inp = document.getElementById('newFolderName');
+    const nombre = inp.value.trim();
+    if (!nombre) { hablar('Escribí un nombre para la carpeta'); return; }
+    documentos.unshift({ id: 'carp-' + Date.now(), nombre, tipo: 'carpeta', cuando: '0 archivos' });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos));
+    renderRecientes();
+    inp.value = '';
+    hablar(`Carpeta “${nombre}” creada`);
+  });
+
+  const driveStatusPill = document.getElementById('driveStatusPill');
+  const btnGoogleSignIn = document.getElementById('btnGoogleSignIn');
+  const btnGoogleSignInLabel = document.getElementById('btnGoogleSignInLabel');
+  const btnDriveUploadNow = document.getElementById('btnDriveUploadNow');
+
+  async function subirRespaldoAGoogleDrive() {
+    if (!googleAccessToken) return;
+    prender('amarillo');
+    syncTexto.textContent = 'Subiendo a Drive…';
+    try {
+      const metadata = { name: 'QuipuOffice_Backup.json', mimeType: 'application/json' };
+      const contenido = JSON.stringify({ app: 'Quipu Office', fecha: new Date().toISOString(), documentos });
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', new Blob([contenido], { type: 'application/json' }));
+
+      const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${googleAccessToken}` },
+        body: form
+      });
+      if (resp.ok) {
+        prender('verde');
+        syncTexto.textContent = 'Sincronizado';
+        syncHora.textContent = 'en Google Drive';
+        hablar('¡Documentos guardados en tu Google Drive!');
+      } else throw new Error('Error en Drive');
+    } catch {
+      prender('rojo');
+      hablar('No se pudo subir a Drive en este momento');
+    }
+  }
+
+  btnGoogleSignIn.addEventListener('click', () => {
+    if (GOOGLE_CLIENT_ID.startsWith('TU_CLIENT_ID')) {
+      hablar('Pegá tu GOOGLE_CLIENT_ID fijo en el código para activar el inicio de sesión');
+      return;
+    }
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      hablar('Cargando servicios de Google, intentá de nuevo…');
+      return;
+    }
+    if (!tokenClient) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_DRIVE_SCOPE,
+        callback: (tokenResponse) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            googleAccessToken = tokenResponse.access_token;
+            driveStatusPill.textContent = '🟢 Conectado a Google Drive';
+            driveStatusPill.style.background = '#DCFCE7';
+            btnGoogleSignInLabel.textContent = 'Cambiar cuenta de Google';
+            btnDriveUploadNow.style.display = 'inline-flex';
+            subirRespaldoAGoogleDrive();
+          }
+        }
+      });
+    }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  });
+
+  btnDriveUploadNow.addEventListener('click', subirRespaldoAGoogleDrive);
+
+  document.getElementById('btnDriveBackupDownload').addEventListener('click', async () => {
+    prender('amarillo');
+    const payload = JSON.stringify({ app: 'Quipu Office', fecha: new Date().toISOString(), documentos }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Respaldo_QuipuOffice_${new Date().toISOString().slice(0, 10)}.quipu.json`; a.click();
+    URL.revokeObjectURL(url);
+    await esperar(500);
+    prender('verde');
+    syncHora.textContent = 'Copia descargada';
+    hablar('Copia de seguridad descargada');
+  });
+
+  const driveImportInput = document.getElementById('driveImportInput');
+  document.getElementById('btnDriveBackupImport').addEventListener('click', () => driveImportInput.click());
+  driveImportInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (Array.isArray(data.documentos)) {
+          documentos = data.documentos;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos));
+          renderRecientes();
+          hablar(`Se restauraron ${documentos.length} archivos`);
+        }
+      } catch { hablar('El archivo seleccionado no es válido'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* =========================================================
+     MÓDULO 1: QUIPUTEXTO CON SALTO AUTOMÁTICO REAL ENTRE HOJAS A4
+     ========================================================= */
+  const qtextTitle = document.getElementById('qtextTitle');
+  const qtextPagesStack = document.getElementById('qtextPagesStack');
+  const qtextStats = document.getElementById('qtextStats');
+  const qtextSavedState = document.getElementById('qtextSavedState');
+  const zoomValue = document.getElementById('zoomValue');
+  const btnZoomWidth = document.getElementById('btnZoomWidth');
+  const btnToggleHeader = document.getElementById('btnToggleHeader');
+  const btnToggleFooter = document.getElementById('btnToggleFooter');
+  const btnTogglePageNum = document.getElementById('btnTogglePageNum');
+  const btnOrientation = document.getElementById('btnOrientation');
+
+  let zoomActual = 100, esHorizontal = false, hojaActivaBody = null;
+  let paginandoEnCurso = false;
+
+  function colocarCursorAlFinal(el) {
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function verificarDesbordePaginas(sheet) {
+    if (paginandoEnCurso) return;
+    const bodyEl = sheet.querySelector('.qtext-page-body');
+    if (!bodyEl) return;
+
+    // Medir usando Range sobre el contenido real dentro del cuerpo
+    const estilo = window.getComputedStyle(bodyEl);
+    const padTop = parseFloat(estilo.paddingTop) || 36;
+    const padBottom = parseFloat(estilo.paddingBottom) || 36;
+    const alturaUtilMax = bodyEl.clientHeight - padTop - padBottom;
+
+    const medirAlturaContenido = () => {
+      if (!bodyEl.childNodes.length) return 0;
+      const r = document.createRange();
+      r.selectNodeContents(bodyEl);
+      return r.getBoundingClientRect().height;
+    };
+
+    if (medirAlturaContenido() > alturaUtilMax + 2 || bodyEl.scrollHeight > bodyEl.clientHeight + 2) {
+      paginandoEnCurso = true;
+      const estabaEnEstaHoja = (document.activeElement === bodyEl);
+      try {
+        let nextSheet = sheet.nextElementSibling;
+        if (!nextSheet || !nextSheet.classList.contains('qtext-sheet')) {
+          const hojas = qtextPagesStack.querySelectorAll('.qtext-sheet');
+          const enc = hojas[0]?.querySelector('.qtext-header-zone')?.innerHTML || '';
+          const pie = hojas[0]?.querySelector('.qtext-footer-text')?.innerHTML || '';
+          nextSheet = crearHojaElemento('', hojas.length + 1, hojas.length + 1, enc, pie);
+          qtextPagesStack.appendChild(nextSheet);
+        }
+        const nextBody = nextSheet.querySelector('.qtext-page-body');
+
+        // 1. Mover bloques completos del final hacia la hoja siguiente
+        while ((medirAlturaContenido() > alturaUtilMax + 2 || bodyEl.scrollHeight > bodyEl.clientHeight + 2) && bodyEl.childNodes.length > 1) {
+          const ultimo = bodyEl.lastChild;
+          if (nextBody.firstChild) nextBody.insertBefore(ultimo, nextBody.firstChild);
+          else nextBody.appendChild(ultimo);
+        }
+
+        // 2. Si el único nodo restante sigue siendo más alto que la hoja (ej. un párrafo largo o texto directo), partir por palabras
+        while ((medirAlturaContenido() > alturaUtilMax + 2 || bodyEl.scrollHeight > bodyEl.clientHeight + 2) && bodyEl.lastChild) {
+          const nodo = bodyEl.lastChild;
+          const textoNodo = nodo.textContent || '';
+          const palabras = textoNodo.trim().split(/\s+/);
+          if (palabras.length <= 1) break;
+
+          const movidas = [];
+          while ((medirAlturaContenido() > alturaUtilMax + 2 || bodyEl.scrollHeight > bodyEl.clientHeight + 2) && palabras.length > 1) {
+            movidas.unshift(palabras.pop());
+            nodo.textContent = palabras.join(' ');
+          }
+
+          if (movidas.length) {
+            const pSig = document.createElement('div');
+            pSig.textContent = movidas.join(' ');
+            if (nextBody.firstChild) nextBody.insertBefore(pSig, nextBody.firstChild);
+            else nextBody.appendChild(pSig);
+          }
+          break;
+        }
+
+        renumerarHojas();
+        actualizarEstadisticasTexto();
+
+        if (estabaEnEstaHoja) {
+          hojaActivaBody = nextBody;
+          colocarCursorAlFinal(nextBody);
+          nextSheet.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        setTimeout(() => verificarDesbordePaginas(nextSheet), 15);
+      } finally {
+        paginandoEnCurso = false;
+      }
+    }
+  }
+
+  function crearHojaElemento(htmlCuerpo = '', numPagina = 1, totalPaginas = 1, encTexto = '', pieTexto = '') {
+    const sheet = document.createElement('div');
+    sheet.className = 'qtext-sheet' + (esHorizontal ? ' horizontal' : '');
+    if (btnZoomWidth.classList.contains('activo')) sheet.classList.add('ancho-completo');
+    else {
+      const baseAncho = esHorizontal ? 1056 : 794;
+      const baseAlto = esHorizontal ? 760 : 1056;
+      sheet.style.width = `${Math.round(baseAncho * (zoomActual / 100))}px`;
+      sheet.style.height = `${Math.round(baseAlto * (zoomActual / 100))}px`;
+    }
+
+    const hayEnc = btnToggleHeader.classList.contains('activo');
+    const hayPie = btnToggleFooter.classList.contains('activo');
+    const hayNum = btnTogglePageNum.classList.contains('activo');
+
+    sheet.innerHTML = `
+      <div class="sheet-badge-bar">
+        <span>Página ${numPagina} de ${totalPaginas}</span>
+        ${totalPaginas > 1 ? `<button type="button" class="btn-del-sheet" title="Eliminar esta hoja">✕</button>` : ''}
+      </div>
+      <div class="qtext-header-zone ${hayEnc ? 'visible' : ''}" contenteditable="true" data-placeholder="Encabezado de página…">${encTexto}</div>
+      <div class="qtext-page-body" contenteditable="true" spellcheck="true" data-placeholder="Escribí en la página ${numPagina}…">${htmlCuerpo}</div>
+      <div class="qtext-footer-zone ${(hayPie || hayNum) ? 'visible' : ''}">
+        <div class="qtext-footer-text" contenteditable="true" data-placeholder="Pie de página…" style="display:${hayPie ? 'block' : 'none'}">${pieTexto}</div>
+        <span class="qtext-page-num ${hayNum ? 'visible' : ''}" contenteditable="true" title="Número editable">${numPagina}</span>
+      </div>`;
+
+    const bodyEl = sheet.querySelector('.qtext-page-body');
+    bodyEl.style.fontSize = `${Math.round(15 * (zoomActual / 100))}px`;
+    bodyEl.style.lineHeight = document.getElementById('ribLineHeight').value;
+    bodyEl.addEventListener('focus', () => { hojaActivaBody = bodyEl; });
+    bodyEl.addEventListener('input', () => {
+      verificarDesbordePaginas(sheet);
+      actualizarEstadisticasTexto();
+      qtextSavedState.textContent = 'Cambios sin guardar…';
+    });
+
+    const delBtn = sheet.querySelector('.btn-del-sheet');
+    if (delBtn) delBtn.addEventListener('click', () => { sheet.remove(); renumerarHojas(); actualizarEstadisticasTexto(); hablar('Página eliminada'); });
+    return sheet;
+  }
+
+  function renumerarHojas() {
+    const hojas = qtextPagesStack.querySelectorAll('.qtext-sheet'), total = hojas.length;
+    const hayEnc = btnToggleHeader.classList.contains('activo'), hayPie = btnToggleFooter.classList.contains('activo'), hayNum = btnTogglePageNum.classList.contains('activo');
+    hojas.forEach((sheet, idx) => {
+      const n = idx + 1, badge = sheet.querySelector('.sheet-badge-bar');
+      badge.innerHTML = `<span>Página ${n} de ${total}</span>${total > 1 ? `<button type="button" class="btn-del-sheet" title="Eliminar esta hoja">✕</button>` : ''}`;
+      const delBtn = badge.querySelector('.btn-del-sheet');
+      if (delBtn) delBtn.addEventListener('click', () => { sheet.remove(); renumerarHojas(); actualizarEstadisticasTexto(); hablar('Página eliminada'); });
+      sheet.querySelector('.qtext-header-zone').classList.toggle('visible', hayEnc);
+      sheet.querySelector('.qtext-footer-zone').classList.toggle('visible', hayPie || hayNum);
+      sheet.querySelector('.qtext-footer-text').style.display = hayPie ? 'block' : 'none';
+      const pNum = sheet.querySelector('.qtext-page-num');
+      pNum.classList.toggle('visible', hayNum);
+      if (/^\d+$/.test(pNum.textContent.trim())) pNum.textContent = String(n);
+    });
+  }
+
+  function aplicarZoom(nuevoZoom) {
+    btnZoomWidth.classList.remove('activo');
+    zoomActual = Math.min(160, Math.max(70, nuevoZoom));
+    const anchoPx = Math.round((esHorizontal ? 1056 : 794) * (zoomActual / 100));
+    const altoPx = Math.round((esHorizontal ? 760 : 1056) * (zoomActual / 100));
+    qtextPagesStack.querySelectorAll('.qtext-sheet').forEach(sheet => {
+      sheet.classList.remove('ancho-completo');
+      sheet.style.width = `${anchoPx}px`;
+      sheet.style.height = `${altoPx}px`;
+      sheet.querySelector('.qtext-page-body').style.fontSize = `${Math.round(15 * (zoomActual / 100))}px`;
+    });
+    zoomValue.textContent = `${zoomActual}%`;
+  }
+
+  document.getElementById('btnZoomOut').addEventListener('click', () => aplicarZoom(zoomActual - 10));
+  document.getElementById('btnZoomIn').addEventListener('click', () => aplicarZoom(zoomActual + 10));
+  btnZoomWidth.addEventListener('click', () => {
+    const activo = !btnZoomWidth.classList.contains('activo');
+    btnZoomWidth.classList.toggle('activo', activo);
+    if (activo) { qtextPagesStack.querySelectorAll('.qtext-sheet').forEach(s => s.classList.add('ancho-completo')); zoomValue.textContent = 'Ancho'; }
+    else aplicarZoom(100);
+  });
+
+  document.getElementById('btnAddPage').addEventListener('click', () => {
+    const hojasActuales = qtextPagesStack.querySelectorAll('.qtext-sheet');
+    const encActual = hojasActuales[0]?.querySelector('.qtext-header-zone')?.innerHTML || '';
+    const pieActual = hojasActuales[0]?.querySelector('.qtext-footer-text')?.innerHTML || '';
+    const nueva = crearHojaElemento('', hojasActuales.length + 1, hojasActuales.length + 1, encActual, pieActual);
+    qtextPagesStack.appendChild(nueva); renumerarHojas(); actualizarEstadisticasTexto();
+    const nuevoBody = nueva.querySelector('.qtext-page-body'); hojaActivaBody = nuevoBody; nuevoBody.focus();
+    nueva.scrollIntoView({ behavior: 'smooth', block: 'start' }); hablar('Página en blanco agregada');
+  });
+
+  const PLANTILLAS_TEXTO = {
+    blanco: [''],
+    informe: [`<h1>Título del Informe / Trabajo Práctico</h1><p><b>Materia:</b> Nombre de la asignatura &nbsp;|&nbsp; <b>Alumno/a:</b> Tu nombre</p><hr><h3>1. Introducción</h3><p>Escribí acá la presentación general del tema a desarrollar.</p><h3>2. Desarrollo</h3><p>Desarrollá los puntos principales con subtítulos, tablas o listas.</p><h3>3. Conclusión</h3><p>Síntesis final y cierre del trabajo.</p>`],
+    carta: [`<p style="text-align: right;">Pigüé, Buenos Aires, ${new Date().toLocaleDateString('es-AR')}</p><p><b>Sr./Sra. Destinatario/a</b><br>Presente</p><p>De mi mayor consideración:</p><p style="text-indent: 2em;">Me dirijo a usted con el motivo de comunicarle...</p><p>Sin otro particular, saludo atentamente.</p><p><br><b>Firma y Aclaración</b></p>`],
+    cv: [`<h1>Nombre y Apellido</h1><p><b>Teléfono:</b> +54 9 ... &nbsp;•&nbsp; <b>Email:</b> correo@ejemplo.com &nbsp;•&nbsp; <b>Ciudad:</b> Buenos Aires, Argentina</p><h3>Perfil Profesional</h3><p>Breve resumen de tu experiencia, habilidades clave y objetivos.</p><h3>Experiencia Laboral</h3><ul><li><b>Puesto / Empresa</b> (2024 – Actualidad): Descripción de tareas principales.</li></ul><h3>Formación Académica</h3><ul><li><b>Título / Institución</b> (Año de egreso)</li></ul>`]
+  };
+
+  document.getElementById('qtextTemplates').addEventListener('change', e => {
+    const clave = e.target.value;
+    if (!(clave in PLANTILLAS_TEXTO)) return;
+    renderizarHojasTexto(PLANTILLAS_TEXTO[clave], '', ''); actualizarEstadisticasTexto();
+    qtextSavedState.textContent = clave === 'blanco' ? 'Hoja en blanco' : 'Formato aplicado';
+    hablar(clave === 'blanco' ? 'Documento limpio en blanco' : 'Formato cargado'); e.target.value = '';
+  });
+
+  btnOrientation.addEventListener('click', () => {
+    esHorizontal = !esHorizontal;
+    btnOrientation.textContent = esHorizontal ? '📐 Horizontal' : '📐 Vertical';
+    btnOrientation.classList.toggle('activo', esHorizontal);
+    qtextPagesStack.querySelectorAll('.qtext-sheet').forEach(s => s.classList.toggle('horizontal', esHorizontal));
+    aplicarZoom(zoomActual); hablar(esHorizontal ? 'Hojas en horizontal' : 'Hojas en vertical');
+  });
+
+  document.getElementById('ribLineHeight').addEventListener('change', e => qtextPagesStack.querySelectorAll('.qtext-page-body').forEach(b => b.style.lineHeight = e.target.value));
+  [btnToggleHeader, btnToggleFooter, btnTogglePageNum].forEach(btn => btn.addEventListener('click', () => { btn.classList.toggle('activo'); renumerarHojas(); }));
+
+  function renderizarHojasTexto(listaPaginas, enc = '', pie = '') {
+    qtextPagesStack.innerHTML = '';
+    const pags = (listaPaginas && listaPaginas.length) ? listaPaginas : [''];
+    pags.forEach((html, idx) => {
+      const sheet = crearHojaElemento(html, idx + 1, pags.length, enc, pie);
+      qtextPagesStack.appendChild(sheet);
+      if (idx === 0) hojaActivaBody = sheet.querySelector('.qtext-page-body');
+    });
+    renumerarHojas();
+    setTimeout(() => {
+      qtextPagesStack.querySelectorAll('.qtext-sheet').forEach(s => verificarDesbordePaginas(s));
+    }, 50);
+  }
+
+  function actualizarEstadisticasTexto() {
+    const cuerpos = Array.from(qtextPagesStack.querySelectorAll('.qtext-page-body'));
+    const textoTotal = cuerpos.map(b => b.innerText.trim()).join(' ').trim();
+    const palabras = textoTotal ? textoTotal.split(/\s+/).length : 0;
+    qtextStats.textContent = `${palabras} palabra${palabras === 1 ? '' : 's'} • ${cuerpos.length} página${cuerpos.length === 1 ? '' : 's'}`;
+  }
+
+  function cargarEnQuipuTexto(doc = null) {
+    esHorizontal = false; btnOrientation.textContent = '📐 Vertical'; btnOrientation.classList.remove('activo');
+    zoomActual = 100; zoomValue.textContent = '100%'; btnZoomWidth.classList.remove('activo');
+    if (doc) {
+      docActivoId = doc.id; qtextTitle.value = doc.nombre;
+      btnToggleHeader.classList.toggle('activo', Boolean(doc.encabezado));
+      btnToggleFooter.classList.toggle('activo', Boolean(doc.pie));
+      btnTogglePageNum.classList.toggle('activo', Boolean(doc.numPagina));
+      renderizarHojasTexto(doc.paginas || (doc.contenido !== undefined ? [doc.contenido] : ['']), doc.encabezado || '', doc.pie || '');
+      qtextSavedState.textContent = 'Guardado';
+    } else {
+      docActivoId = 'doc-' + Date.now(); qtextTitle.value = 'Documento sin título';
+      btnToggleHeader.classList.remove('activo'); btnToggleFooter.classList.remove('activo'); btnTogglePageNum.classList.remove('activo');
+      renderizarHojasTexto([''], '', ''); qtextSavedState.textContent = 'Hoja en blanco';
+    }
+    actualizarEstadisticasTexto(); setTimeout(() => hojaActivaBody && hojaActivaBody.focus(), 50);
+  }
+
+  function enfocarHojaActiva() {
+    if (!hojaActivaBody || !document.body.contains(hojaActivaBody)) hojaActivaBody = qtextPagesStack.querySelector('.qtext-page-body');
+    if (hojaActivaBody) hojaActivaBody.focus();
+  }
+
+  document.querySelectorAll('.rib-tool[data-cmd]').forEach(btn => btn.addEventListener('click', () => { enfocarHojaActiva(); document.execCommand(btn.dataset.cmd, false, null); }));
+  document.getElementById('ribFont').addEventListener('change', e => { enfocarHojaActiva(); document.execCommand('fontName', false, e.target.value); });
+  document.getElementById('ribSize').addEventListener('change', e => { enfocarHojaActiva(); document.execCommand('fontSize', false, e.target.value); });
+  document.getElementById('ribTextColor').addEventListener('input', e => { enfocarHojaActiva(); document.execCommand('foreColor', false, e.target.value); });
+  document.getElementById('btnHighlight').addEventListener('click', () => { enfocarHojaActiva(); document.execCommand('hiliteColor', false, '#FEF08A'); });
+
+  const btnInsertTable = document.getElementById('btnInsertTable'), tablePopover = document.getElementById('tablePopover'), tablePopoverLabel = document.getElementById('tablePopoverLabel'), tableGridSelector = document.getElementById('tableGridSelector');
+  let rangoGuardado = null;
+  for (let fila = 1; fila <= 8; fila++) {
+    for (let col = 1; col <= 8; col++) {
+      const celda = document.createElement('div'); celda.className = 'table-cell-opt'; celda.dataset.fila = fila; celda.dataset.col = col;
+      tableGridSelector.appendChild(celda);
+    }
+  }
+  function resaltarCeldasTabla(cols, filas) {
+    tablePopoverLabel.textContent = `${cols} columna${cols === 1 ? '' : 's'} × ${filas} fila${filas === 1 ? '' : 's'}`;
+    tableGridSelector.querySelectorAll('.table-cell-opt').forEach(c => c.classList.toggle('seleccionada', Number(c.dataset.fila) <= filas && Number(c.dataset.col) <= cols));
+  }
+  resaltarCeldasTabla(3, 3);
+  tableGridSelector.addEventListener('mouseover', e => { const celda = e.target.closest('.table-cell-opt'); if (celda) resaltarCeldasTabla(Number(celda.dataset.col), Number(celda.dataset.fila)); });
+  tableGridSelector.addEventListener('click', e => {
+    const celda = e.target.closest('.table-cell-opt'); if (!celda) return;
+    const cols = Number(celda.dataset.col), filas = Number(celda.dataset.fila);
+    let html = '<table><tbody>';
+    for (let r = 0; r < filas; r++) { html += '<tr>'; for (let c = 0; c < cols; c++) html += r === 0 ? '<th>&nbsp;</th>' : '<td>&nbsp;</td>'; html += '</tr>'; }
+    html += '</tbody></table><p><br></p>';
+    enfocarHojaActiva();
+    if (rangoGuardado) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rangoGuardado); }
+    document.execCommand('insertHTML', false, html); tablePopover.classList.remove('abierto');
+    const sheetActual = hojaActivaBody?.closest('.qtext-sheet');
+    if (sheetActual) verificarDesbordePaginas(sheetActual);
+    hablar(`Tabla de ${cols}×${filas} insertada`);
+  });
+  btnInsertTable.addEventListener('click', e => {
+    e.stopPropagation();
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && qtextPagesStack.contains(sel.anchorNode)) rangoGuardado = sel.getRangeAt(0);
+    tablePopover.classList.toggle('abierto');
+  });
+  document.addEventListener('click', e => { if (!tablePopover.contains(e.target) && e.target !== btnInsertTable) tablePopover.classList.remove('abierto'); });
+
+  const qtextImgInput = document.getElementById('qtextImgInput');
+  document.getElementById('btnInsertImage').addEventListener('click', () => qtextImgInput.click());
+  qtextImgInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      enfocarHojaActiva();
+      document.execCommand('insertHTML', false, `<img src="${ev.target.result}" alt="${file.name}"><p><br></p>`);
+      const sheetActual = hojaActivaBody?.closest('.qtext-sheet');
+      if (sheetActual) setTimeout(() => verificarDesbordePaginas(sheetActual), 60);
+      hablar('Imagen agregada');
+    };
+    reader.readAsDataURL(file); e.target.value = '';
+  });
+
+  document.getElementById('btnQtextSave').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = qtextTitle.value.trim() || 'Documento sin título';
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const existente = documentos.find(d => d.id === docActivoId);
+    const paginasArr = Array.from(qtextPagesStack.querySelectorAll('.qtext-page-body')).map(b => b.innerHTML);
+    const encabezadoVal = btnToggleHeader.classList.contains('activo') ? (qtextPagesStack.querySelector('.qtext-header-zone')?.innerHTML || '') : '';
+    const pieVal = btnToggleFooter.classList.contains('activo') ? (qtextPagesStack.querySelector('.qtext-footer-text')?.innerHTML || '') : '';
+    const numPaginaVal = btnTogglePageNum.classList.contains('activo');
+    if (existente) { existente.nombre = nombre; existente.paginas = paginasArr; existente.encabezado = encabezadoVal; existente.pie = pieVal; existente.numPagina = numPaginaVal; existente.cuando = `Hoy, ${hora}`; }
+    else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'texto', cuando: `Hoy, ${hora}`, paginas: paginasArr, encabezado: encabezadoVal, pie: pieVal, numPagina: numPaginaVal });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
+    await esperar(450); prender('verde'); qtextSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardado`);
+  });
+
+  document.getElementById('btnQtextDoc').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = (qtextTitle.value.trim() || 'Documento_Quipu').replace(/[^\w\sáéíóúñÁÉÍÓÚÑ-]/g, '');
+    const sheets = Array.from(qtextPagesStack.querySelectorAll('.qtext-sheet'));
+    const contenidoUnido = sheets.map((s, i) => s.querySelector('.qtext-page-body').innerHTML + (i < sheets.length - 1 ? `<br clear="all" style="page-break-before:always">` : '')).join('');
+    const htmlDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${nombre}</title></head><body style="font-family: Arial, sans-serif; line-height: 1.5;">${contenidoUnido}</body></html>`;
+    const blob = new Blob(['\ufeff', htmlDoc], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${nombre}.doc`; a.click(); URL.revokeObjectURL(url);
+    await esperar(500); prender('verde'); hablar(`Descargando ${nombre}.doc`);
+  });
+
+  document.getElementById('btnQtextPdf').addEventListener('click', () => {
+    prender('amarillo');
+    const prevZoom = zoomActual;
+    aplicarZoom(100);
+    hablar('Preparando PDF multipágina…');
+    setTimeout(() => {
+      window.print();
+      aplicarZoom(prevZoom);
+      prender('verde');
+    }, 300);
+  });
+
+  const btnDictate = document.getElementById('btnDictate');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null, dictando = false;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition(); recognition.lang = 'es-AR'; recognition.continuous = true; recognition.interimResults = false;
+    recognition.onresult = event => { enfocarHojaActiva(); document.execCommand('insertText', false, event.results[event.results.length - 1][0].transcript + ' '); };
+    recognition.onend = () => { if (dictando) recognition.start(); };
+  }
+  btnDictate.addEventListener('click', () => {
+    if (!recognition) { hablar('Tu navegador no soporta dictado por voz'); return; }
+    dictando = !dictando;
+    if (dictando) { btnDictate.classList.add('grabando'); btnDictate.textContent = '⏹️ Parar'; prender('rojo'); lente.classList.add('pulso'); recognition.start(); hablar('Escuchando dictado…'); }
+    else { btnDictate.classList.remove('grabando'); btnDictate.textContent = '🎤 Dictar'; recognition.stop(); prender('verde'); lente.classList.remove('pulso'); hablar('Dictado detenido'); }
+  });
+
+  const btnReadAloud = document.getElementById('btnReadAloud');
+  let leyendo = false;
+  function detenerLectura() {
+    window.speechSynthesis.cancel(); leyendo = false; btnReadAloud.classList.remove('grabando'); btnReadAloud.textContent = '🔊 Leer';
+    parlante.classList.remove('speaking'); lente.classList.remove('pulso'); prender('verde');
+  }
+  btnReadAloud.addEventListener('click', () => {
+    if (leyendo || window.speechSynthesis.speaking) { detenerLectura(); hablar('Lectura detenida'); return; }
+    const texto = Array.from(qtextPagesStack.querySelectorAll('.qtext-page-body')).map(b => b.innerText.trim()).join('\n').trim();
+    if (!texto) { hablar('Las hojas están vacías para leer'); return; }
+    window.speechSynthesis.cancel();
+    const voz = new SpeechSynthesisUtterance(texto); voz.lang = 'es-AR';
+    voz.onstart = () => { leyendo = true; btnReadAloud.classList.add('grabando'); btnReadAloud.textContent = '⏹️ Parar'; parlante.classList.add('speaking'); lente.classList.add('pulso'); prender('amarillo'); };
+    voz.onend = () => detenerLectura(); voz.onerror = () => detenerLectura();
+    window.speechSynthesis.speak(voz);
+  });
+
+  /* =========================================================
+     MÓDULO 2: QUIPUCÁLCULO
+     ========================================================= */
+  const COLS = 14, ROWS = 30;
+  const qcalcTable = document.getElementById('qcalcTable');
+  const qcalcTitle = document.getElementById('qcalcTitle');
+  const qcalcCellRef = document.getElementById('qcalcCellRef');
+  const qcalcFxInput = document.getElementById('qcalcFxInput');
+  const qcalcSummary = document.getElementById('qcalcSummary');
+  const qcalcSavedState = document.getElementById('qcalcSavedState');
+  const qcalcSheetsBar = document.getElementById('qcalcSheetsBar');
+  const qcalcChartPanel = document.getElementById('qcalcChartPanel');
+  const qcalcChartCanvas = document.getElementById('qcalcChartCanvas');
+  const qcalcChartTitle = document.getElementById('qcalcChartTitle');
+
+  let libroHojas = [{ nombre: 'Hoja 1', celdas: {} }];
+  let hojaActivaIdx = 0, celdaActiva = 'A1';
+  let selInicio = { col: 0, row: 1 }, selFin = { col: 0, row: 1 };
+  let seleccionandoRango = false, arrastrandoFill = false, fillFin = null, tipoGraficoActual = 'bar';
+
+  function getCalcDatos() { return libroHojas[hojaActivaIdx].celdas; }
+  function colLetra(idx) { return String.fromCharCode(65 + idx); }
+  function refDesdePos(col, row) { return `${colLetra(col)}${row}`; }
+  function parsearRef(ref) { const m = /^([A-Z]+)(\d+)$/i.exec(ref.trim()); return m ? { col: m[1].toUpperCase().charCodeAt(0) - 65, row: parseInt(m[2], 10) } : null; }
+  function desplazarFormula(raw, deltaCol, deltaRow) {
+    if (!raw || !String(raw).startsWith('=')) return raw;
+    return String(raw).replace(/\b([A-Z]+)(\d+)\b/gi, (match, colStr, rowStr) => {
+      const colIdx = colStr.toUpperCase().charCodeAt(0) - 65 + deltaCol, rowNum = parseInt(rowStr, 10) + deltaRow;
+      return (colIdx < 0 || colIdx >= COLS || rowNum < 1 || rowNum > ROWS) ? match : `${colLetra(colIdx)}${rowNum}`;
+    });
+  }
+  function expandirRango(rangoStr, visitadas = new Set()) {
+    const [ini, fin] = rangoStr.split(':'), a = parsearRef(ini), b = parsearRef(fin);
+    if (!a || !b) return [];
+    const valores = [];
+    for (let r = Math.min(a.row, b.row); r <= Math.max(a.row, b.row); r++) {
+      for (let c = Math.min(a.col, b.col); c <= Math.max(a.col, b.col); c++) {
+        const val = evaluarCelda(`${colLetra(c)}${r}`, new Set(visitadas));
+        if (typeof val === 'number' && !isNaN(val)) valores.push(val);
+      }
+    }
+    return valores;
+  }
+
+  function evaluarCelda(ref, visitadas = new Set()) {
+    if (visitadas.has(ref)) return '#CICLO!';
+    visitadas.add(ref);
+    const celda = getCalcDatos()[ref];
+    if (!celda || celda.raw === undefined || celda.raw === '') return '';
+    const raw = String(celda.raw).trim();
+    if (!raw.startsWith('=')) {
+      const num = Number(raw.replace(',', '.'));
+      return (!isNaN(num) && raw !== '') ? num : raw;
+    }
+    try {
+      let expr = raw.slice(1).trim();
+      const siMatch = /^SI\(([^;,]+)[;,]([^;,]+)[;,]([^)]+)\)$/i.exec(expr);
+      if (siMatch) {
+        const cEval = siMatch[1].replace(/\b([A-Z]+\d+)\b/gi, (_, rc) => {
+          const v = evaluarCelda(rc.toUpperCase(), new Set(visitadas));
+          return typeof v === 'number' ? v : JSON.stringify(String(v));
+        });
+        const elegido = Function(`"use strict"; return (${cEval});`)() ? siMatch[2].trim() : siMatch[3].trim();
+        if (/^".*"$/.test(elegido) || /^'.*'$/.test(elegido)) return elegido.slice(1, -1);
+        const n = Number(elegido.replace(',', '.'));
+        return !isNaN(n) ? n : elegido;
+      }
+
+      expr = expr.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+      expr = expr.toUpperCase();
+
+      expr = expr.replace(/(SUMA|SUM)\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/g, (_, __, r1, r2) => expandirRango(`${r1}:${r2}`, visitadas).reduce((acc, v) => acc + v, 0));
+      expr = expr.replace(/(PROMEDIO|AVERAGE)\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/g, (_, __, r1, r2) => {
+        const arr = expandirRango(`${r1}:${r2}`, visitadas);
+        return arr.length ? arr.reduce((acc, v) => acc + v, 0) / arr.length : 0;
+      });
+      expr = expr.replace(/MIN\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/g, (_, r1, r2) => {
+        const arr = expandirRango(`${r1}:${r2}`, visitadas);
+        return arr.length ? Math.min(...arr) : 0;
+      });
+      expr = expr.replace(/MAX\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/g, (_, r1, r2) => {
+        const arr = expandirRango(`${r1}:${r2}`, visitadas);
+        return arr.length ? Math.max(...arr) : 0;
+      });
+      expr = expr.replace(/(CONTAR|COUNT)\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/g, (_, __, r1, r2) => expandirRango(`${r1}:${r2}`, visitadas).length);
+
+      expr = expr.replace(/\b([A-Z]+\d+)\b/g, (_, refCell) => {
+        const val = evaluarCelda(refCell, new Set(visitadas));
+        if (typeof val === 'string' && val.startsWith('#')) throw new Error(val);
+        return typeof val === 'number' ? val : 0;
+      });
+
+      if (/[^0-9+\-*/().\s]/.test(expr)) return '#ERROR!';
+      const res = Function(`"use strict"; return (${expr})`)();
+      return typeof res === 'number' && isFinite(res) ? Number(res.toFixed(4)) : '#ERROR!';
+    } catch { return '#ERROR!'; }
+  }
+
+  function formatearValor(val, fmt) {
+    if (typeof val !== 'number') return val;
+    if (fmt === 'currency') return '$ ' + val.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    if (fmt === 'percent') return (val * 100).toFixed(1) + '%';
+    return val.toLocaleString('es-AR', { maximumFractionDigits: 4 });
+  }
+
+  function construirGrillaCalculo() {
+    let html = '<thead><tr><th class="corner-th"></th>';
+    for (let c = 0; c < COLS; c++) html += `<th>${colLetra(c)}</th>`;
+    html += '</tr></thead><tbody>';
+    for (let r = 1; r <= ROWS; r++) {
+      html += `<tr><td class="row-header">${r}</td>`;
+      for (let c = 0; c < COLS; c++) html += `<td class="grid-cell" data-ref="${colLetra(c)}${r}" data-col="${c}" data-row="${r}"></td>`;
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    qcalcTable.innerHTML = html;
+  }
+  construirGrillaCalculo();
+
+  function renderizarPestanasHojas() {
+    qcalcSheetsBar.innerHTML = libroHojas.map((h, i) => `
+      <div class="sheet-tab ${i === hojaActivaIdx ? 'activa' : ''}" data-sheet-idx="${i}">
+        <span class="sheet-tab-name">${h.nombre}</span>
+        <span class="sheet-tab-action btn-rename-sheet">✎</span>
+        ${libroHojas.length > 1 ? `<span class="sheet-tab-action btn-close-sheet">×</span>` : ''}
+      </div>`).join('') + `<button type="button" class="sheet-tab" id="btnAddSheet">+ Hoja</button>`;
+
+    qcalcSheetsBar.querySelectorAll('.sheet-tab[data-sheet-idx]').forEach(tab => {
+      const idx = Number(tab.dataset.sheetIdx), nameSpan = tab.querySelector('.sheet-tab-name');
+      const activarEdicionNombre = () => { nameSpan.contentEditable = 'true'; nameSpan.focus(); const range = document.createRange(); range.selectNodeContents(nameSpan); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); };
+      const guardarNombreHoja = () => { nameSpan.contentEditable = 'false'; libroHojas[idx].nombre = nameSpan.textContent.trim() || `Hoja ${idx + 1}`; nameSpan.textContent = libroHojas[idx].nombre; qcalcSavedState.textContent = 'Cambios sin guardar…'; };
+      tab.addEventListener('click', e => {
+        if (e.target.closest('.btn-rename-sheet')) { activarEdicionNombre(); return; }
+        if (e.target.closest('.btn-close-sheet')) { libroHojas.splice(idx, 1); hojaActivaIdx = Math.max(0, hojaActivaIdx - 1); renderizarPestanasHojas(); renderizarGrillaCalculo(); seleccionarCelda('A1'); return; }
+        if (nameSpan.isContentEditable) return;
+        hojaActivaIdx = idx; renderizarPestanasHojas(); renderizarGrillaCalculo(); seleccionarCelda('A1');
+      });
+      tab.addEventListener('dblclick', activarEdicionNombre); nameSpan.addEventListener('blur', guardarNombreHoja);
+      nameSpan.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameSpan.blur(); } });
+    });
+    document.getElementById('btnAddSheet').addEventListener('click', () => { libroHojas.push({ nombre: `Hoja ${libroHojas.length + 1}`, celdas: {} }); hojaActivaIdx = libroHojas.length - 1; renderizarPestanasHojas(); renderizarGrillaCalculo(); seleccionarCelda('A1'); });
+  }
+
+  function actualizarBarraResumenSeleccion() {
+    const nums = [];
+    for (let r = Math.min(selInicio.row, selFin.row); r <= Math.max(selInicio.row, selFin.row); r++) {
+      for (let c = Math.min(selInicio.col, selFin.col); c <= Math.max(selInicio.col, selFin.col); c++) {
+        const val = evaluarCelda(refDesdePos(c, r));
+        if (typeof val === 'number' && !isNaN(val)) nums.push(val);
+      }
+    }
+    if (nums.length > 1) {
+      const suma = nums.reduce((a, b) => a + b, 0);
+      qcalcSummary.textContent = `Promedio: ${(suma / nums.length).toLocaleString('es-AR', { maximumFractionDigits: 2 })}  •  Recuento: ${nums.length}  •  Suma: ${suma.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+    } else qcalcSummary.textContent = '';
+  }
+
+  function actualizarVisualSeleccion() {
+    const minC = Math.min(selInicio.col, selFin.col), maxC = Math.max(selInicio.col, selFin.col);
+    const minR = Math.min(selInicio.row, selFin.row), maxR = Math.max(selInicio.row, selFin.row);
+    qcalcTable.querySelectorAll('.fill-handle').forEach(h => h.remove());
+    qcalcTable.querySelectorAll('.grid-cell').forEach(td => {
+      const c = Number(td.dataset.col), r = Number(td.dataset.row), esActiva = td.dataset.ref === celdaActiva;
+      td.classList.toggle('activa', esActiva);
+      td.classList.toggle('en-rango', (c >= minC && c <= maxC && r >= minR && r <= maxR) && !esActiva);
+      td.classList.toggle('en-autorrelleno', Boolean(arrastrandoFill && fillFin && c >= Math.min(minC, fillFin.col) && c <= Math.max(maxC, fillFin.col) && r >= Math.min(minR, fillFin.row) && r <= Math.max(maxR, fillFin.row)));
+      if (c === maxC && r === maxR && !td.classList.contains('editando')) { const h = document.createElement('div'); h.className = 'fill-handle'; td.appendChild(h); }
+    });
+    qcalcCellRef.textContent = (minC === maxC && minR === maxR) ? celdaActiva : `${refDesdePos(minC, minR)}:${refDesdePos(maxC, maxR)}`;
+    actualizarBarraResumenSeleccion();
+  }
+
+  function renderizarGrillaCalculo() {
+    const calcDatos = getCalcDatos();
+    qcalcTable.querySelectorAll('.grid-cell').forEach(td => {
+      const ref = td.dataset.ref, celda = calcDatos[ref] || {}, val = evaluarCelda(ref);
+      if (!td.classList.contains('editando')) td.textContent = formatearValor(val, celda.fmt);
+      td.classList.toggle('tiene-formula', typeof celda.raw === 'string' && celda.raw.trim().startsWith('='));
+      td.classList.toggle('error-val', typeof val === 'string' && val.startsWith('#'));
+      td.style.fontWeight = celda.bold ? '900' : '700'; td.style.fontStyle = celda.italic ? 'italic' : 'normal';
+      td.style.textAlign = celda.align || (typeof val === 'number' ? 'right' : 'left');
+      td.style.color = celda.color || ''; td.style.backgroundColor = celda.bg || '';
+    });
+    actualizarVisualSeleccion();
+    if (qcalcChartPanel.classList.contains('visible')) renderizarGraficoSVG();
+  }
+
+  function seleccionarCelda(ref) {
+    celdaActiva = ref;
+    const pos = parsearRef(ref);
+    if (pos) { selInicio = { ...pos }; selFin = { ...pos }; }
+    qcalcFxInput.value = (getCalcDatos()[ref]?.raw) || '';
+    actualizarVisualSeleccion();
+  }
+  function entrarModoEdicion(td) { if (!td || td.classList.contains('editando')) return; td.classList.add('editando'); td.contentEditable = 'true'; td.textContent = (getCalcDatos()[td.dataset.ref]?.raw) || ''; td.focus(); }
+  function salirModoEdicion(td) { if (!td || !td.classList.contains('editando')) return; const ref = td.dataset.ref, v = td.textContent.trim(); td.classList.remove('editando'); td.contentEditable = 'false'; actualizarCelda(ref, v); }
+  function actualizarCelda(ref, nuevoRaw) { const calcDatos = getCalcDatos(); if (!calcDatos[ref]) calcDatos[ref] = {}; calcDatos[ref].raw = nuevoRaw; qcalcSavedState.textContent = 'Cambios sin guardar…'; renderizarGrillaCalculo(); if (ref === celdaActiva) qcalcFxInput.value = nuevoRaw; }
+
+  qcalcTable.addEventListener('mousedown', e => {
+    if (e.target.closest('.fill-handle')) { e.preventDefault(); e.stopPropagation(); arrastrandoFill = true; fillFin = { ...selFin }; return; }
+    const td = e.target.closest('.grid-cell'); if (!td) return;
+    const prev = qcalcTable.querySelector('.grid-cell.editando'); if (prev && prev !== td) salirModoEdicion(prev);
+    if (td.classList.contains('editando')) return;
+    seleccionandoRango = true; seleccionarCelda(td.dataset.ref);
+  });
+  qcalcTable.addEventListener('mouseover', e => {
+    const td = e.target.closest('.grid-cell'); if (!td) return;
+    if (arrastrandoFill) { fillFin = { col: Number(td.dataset.col), row: Number(td.dataset.row) }; actualizarVisualSeleccion(); }
+    else if (seleccionandoRango) { selFin = { col: Number(td.dataset.col), row: Number(td.dataset.row) }; actualizarVisualSeleccion(); }
+  });
+  document.addEventListener('mouseup', () => { if (arrastrandoFill && fillFin) ejecutarAutorrelleno(); seleccionandoRango = false; arrastrandoFill = false; fillFin = null; actualizarVisualSeleccion(); });
+
+  function ejecutarAutorrelleno() {
+    const calcDatos = getCalcDatos();
+    const minC = Math.min(selInicio.col, selFin.col), maxC = Math.max(selInicio.col, selFin.col);
+    const minR = Math.min(selInicio.row, selFin.row), maxR = Math.max(selInicio.row, selFin.row);
+    const destMaxR = Math.max(maxR, fillFin.row), destMaxC = Math.max(maxC, fillFin.col);
+    if (destMaxR > maxR) {
+      for (let c = minC; c <= maxC; c++) {
+        const origen = calcDatos[refDesdePos(c, maxR)] || {}, rawOrigen = String(origen.raw || ''), numOrigen = Number(rawOrigen);
+        const esSerie = !rawOrigen.startsWith('=') && rawOrigen !== '' && !isNaN(numOrigen);
+        for (let r = maxR + 1; r <= destMaxR; r++) {
+          const dR = r - maxR;
+          calcDatos[refDesdePos(c, r)] = { ...origen, raw: rawOrigen.startsWith('=') ? desplazarFormula(rawOrigen, 0, dR) : (esSerie ? String(numOrigen + dR) : rawOrigen) };
+        }
+      }
+      selFin.row = destMaxR;
+    }
+    if (destMaxC > maxC) {
+      for (let r = minR; r <= maxR; r++) {
+        const origen = calcDatos[refDesdePos(maxC, r)] || {}, rawOrigen = String(origen.raw || '');
+        for (let c = maxC + 1; c <= destMaxC; c++) calcDatos[refDesdePos(c, r)] = { ...origen, raw: rawOrigen.startsWith('=') ? desplazarFormula(rawOrigen, c - maxC, 0) : rawOrigen };
+      }
+      selFin.col = destMaxC;
+    }
+    qcalcSavedState.textContent = 'Cambios sin guardar…'; renderizarGrillaCalculo();
+  }
+
+  qcalcTable.addEventListener('dblclick', e => { const td = e.target.closest('.grid-cell'); if (td) entrarModoEdicion(td); });
+  qcalcTable.addEventListener('focusout', e => { const td = e.target.closest('.grid-cell.editando'); if (td) salirModoEdicion(td); });
+
+  document.addEventListener('keydown', e => {
+    if (vistaActual !== 'calculo' || document.activeElement === qcalcFxInput || document.activeElement === qcalcTitle || document.activeElement === qcalcChartTitle || document.activeElement?.classList.contains('sheet-tab-name')) return;
+    const editandoTd = qcalcTable.querySelector('.grid-cell.editando'), pos = parsearRef(celdaActiva);
+    if (!pos) return;
+    if (editandoTd) {
+      if (e.key === 'Enter') { e.preventDefault(); salirModoEdicion(editandoTd); seleccionarCelda(refDesdePos(pos.col, Math.min(ROWS, pos.row + 1))); }
+      else if (e.key === 'Escape') { editandoTd.textContent = (getCalcDatos()[celdaActiva]?.raw) || ''; salirModoEdicion(editandoTd); }
+      return;
+    }
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault(); let { col, row } = pos;
+      if (e.key === 'ArrowUp') row = Math.max(1, row - 1); if (e.key === 'ArrowDown') row = Math.min(ROWS, row + 1);
+      if (e.key === 'ArrowLeft') col = Math.max(0, col - 1); if (e.key === 'ArrowRight') col = Math.min(COLS - 1, col + 1);
+      seleccionarCelda(refDesdePos(col, row)); return;
+    }
+    if (e.key === 'Enter') { e.preventDefault(); const td = qcalcTable.querySelector(`[data-ref="${celdaActiva}"]`); if (td) entrarModoEdicion(td); return; }
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); borrarRangoSeleccionado(); return; }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const td = qcalcTable.querySelector(`[data-ref="${celdaActiva}"]`);
+      if (td) { td.classList.add('editando'); td.contentEditable = 'true'; td.textContent = ''; td.focus(); }
+    }
+  });
+
+  document.addEventListener('copy', e => {
+    if (vistaActual !== 'calculo' || document.activeElement === qcalcFxInput || qcalcTable.querySelector('.grid-cell.editando')) return;
+    e.preventDefault();
+    const filas = [];
+    for (let r = Math.min(selInicio.row, selFin.row); r <= Math.max(selInicio.row, selFin.row); r++) {
+      const cols = [];
+      for (let c = Math.min(selInicio.col, selFin.col); c <= Math.max(selInicio.col, selFin.col); c++) cols.push(getCalcDatos()[refDesdePos(c, r)]?.raw || '');
+      filas.push(cols.join('\t'));
+    }
+    e.clipboardData.setData('text/plain', filas.join('\n')); hablar('Celdas copiadas');
+  });
+
+  document.addEventListener('paste', e => {
+    if (vistaActual !== 'calculo' || document.activeElement === qcalcFxInput || qcalcTable.querySelector('.grid-cell.editando')) return;
+    const texto = e.clipboardData.getData('text/plain'); if (!texto) return;
+    e.preventDefault(); const pos = parsearRef(celdaActiva); if (!pos) return;
+    const calcDatos = getCalcDatos();
+    texto.replace(/\r/g, '').split('\n').forEach((linea, dr) => {
+      if (linea === '' && dr === texto.split('\n').length - 1) return;
+      linea.split('\t').forEach((val, dc) => {
+        const c = pos.col + dc, r = pos.row + dr;
+        if (c < COLS && r <= ROWS) { const ref = refDesdePos(c, r); if (!calcDatos[ref]) calcDatos[ref] = {}; calcDatos[ref].raw = val.trim(); }
+      });
+    });
+    renderizarGrillaCalculo(); hablar('Datos pegados');
+  });
+
+  qcalcFxInput.addEventListener('input', () => actualizarCelda(celdaActiva, qcalcFxInput.value));
+  qcalcFxInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); renderizarGrillaCalculo(); qcalcFxInput.blur(); } });
+
+  function detectarRangoCercano() {
+    const pos = parsearRef(celdaActiva); if (!pos) return 'A1:A5';
+    if (pos.row > 1 && typeof evaluarCelda(`${colLetra(pos.col)}${pos.row - 1}`) === 'number') {
+      let ini = pos.row - 1; while (ini > 1 && typeof evaluarCelda(`${colLetra(pos.col)}${ini - 1}`) === 'number') ini--;
+      return `${colLetra(pos.col)}${ini}:${colLetra(pos.col)}${pos.row - 1}`;
+    }
+    if (pos.col > 0 && typeof evaluarCelda(`${colLetra(pos.col - 1)}${pos.row}`) === 'number') {
+      let iniC = pos.col - 1; while (iniC > 0 && typeof evaluarCelda(`${colLetra(iniC - 1)}${pos.row}`) === 'number') iniC--;
+      return `${colLetra(iniC)}${pos.row}:${colLetra(pos.col - 1)}${pos.row}`;
+    }
+    return 'B2:B4';
+  }
+
+  document.getElementById('calcFormulaPicker').addEventListener('change', e => {
+    const fn = e.target.value; if (!fn) return;
+    const rango = detectarRangoCercano();
+    actualizarCelda(celdaActiva, fn === 'SI' ? `=SI(B2>10000;"Alto";"Normal")` : `=${fn}(${rango})`);
+    hablar(`Fórmula ${fn} aplicada`); e.target.value = '';
+  });
+
+  function modificarEstiloRango(prop, val) {
+    const calcDatos = getCalcDatos();
+    for (let r = Math.min(selInicio.row, selFin.row); r <= Math.max(selInicio.row, selFin.row); r++) {
+      for (let c = Math.min(selInicio.col, selFin.col); c <= Math.max(selInicio.col, selFin.col); c++) {
+        const ref = refDesdePos(c, r); if (!calcDatos[ref]) calcDatos[ref] = {}; calcDatos[ref][prop] = val;
+      }
+    }
+    qcalcSavedState.textContent = 'Cambios sin guardar…'; renderizarGrillaCalculo();
+  }
+  function borrarRangoSeleccionado() {
+    const calcDatos = getCalcDatos();
+    for (let r = Math.min(selInicio.row, selFin.row); r <= Math.max(selInicio.row, selFin.row); r++) {
+      for (let c = Math.min(selInicio.col, selFin.col); c <= Math.max(selInicio.col, selFin.col); c++) delete calcDatos[refDesdePos(c, r)];
+    }
+    qcalcFxInput.value = ''; renderizarGrillaCalculo();
+  }
+
+  document.getElementById('btnCalcBold').addEventListener('click', () => modificarEstiloRango('bold', !getCalcDatos()[celdaActiva]?.bold));
+  document.getElementById('btnCalcItalic').addEventListener('click', () => modificarEstiloRango('italic', !getCalcDatos()[celdaActiva]?.italic));
+  document.querySelectorAll('[data-calc-align]').forEach(btn => btn.addEventListener('click', () => modificarEstiloRango('align', btn.dataset.calcAlign)));
+  document.getElementById('calcTextColor').addEventListener('input', e => modificarEstiloRango('color', e.target.value));
+  document.getElementById('btnCalcFill').addEventListener('click', () => modificarEstiloRango('bg', document.getElementById('calcBgColor').value));
+  document.getElementById('btnCalcCurrency').addEventListener('click', () => modificarEstiloRango('fmt', getCalcDatos()[celdaActiva]?.fmt === 'currency' ? null : 'currency'));
+  document.getElementById('btnCalcPercent').addEventListener('click', () => modificarEstiloRango('fmt', getCalcDatos()[celdaActiva]?.fmt === 'percent' ? null : 'percent'));
+  document.getElementById('btnCalcAutoSum').addEventListener('click', () => { const r = detectarRangoCercano(); actualizarCelda(celdaActiva, `=SUMA(${r})`); hablar(`Autosuma (${r}) aplicada`); });
+  document.getElementById('btnCalcSortAsc').addEventListener('click', () => {
+    const pos = parsearRef(celdaActiva); if (!pos) return;
+    const col = colLetra(pos.col), calcDatos = getCalcDatos(), filasConDatos = [];
+    for (let r = 2; r <= ROWS; r++) { const val = evaluarCelda(`${col}${r}`); if (val !== '') filasConDatos.push({ r, celda: calcDatos[`${col}${r}`], val }); }
+    filasConDatos.sort((a, b) => String(a.val).localeCompare(String(b.val), 'es', { numeric: true }));
+    filasConDatos.forEach((item, idx) => { calcDatos[`${col}${idx + 2}`] = item.celda; });
+    renderizarGrillaCalculo(); hablar(`Columna ${col} ordenada`);
+  });
+
+  const PALETA_GRAFICO = ['#3B82F6', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6'];
+  function obtenerDatosGrafico() {
+    const pos = parsearRef(celdaActiva), colVal = pos && pos.col > 0 ? colLetra(pos.col) : 'B', items = [];
+    for (let r = 2; r <= ROWS; r++) {
+      const etiq = evaluarCelda(`A${r}`), val = evaluarCelda(`${colVal}${r}`);
+      if (etiq && typeof val === 'number' && !String(etiq).toUpperCase().includes('TOTAL')) items.push({ label: String(etiq), value: val });
+    }
+    return items;
+  }
+  function renderizarGraficoSVG() {
+    const items = obtenerDatosGrafico();
+    if (!items.length) { qcalcChartCanvas.innerHTML = `<p style="text-align:center;color:#475569;font-size:.85rem;font-weight:700;">Cargá etiquetas en Columna A y valores numéricos en Columna B para visualizar el gráfico.</p>`; return; }
+    const W = 360, H = 220, maxVal = Math.max(...items.map(i => i.value), 1);
+    let svgInner = '';
+    if (tipoGraficoActual === 'bar') {
+      const padL = 54, padB = 34, padT = 18, padR = 14, plotW = W - padL - padR, plotH = H - padT - padB;
+      for (let g = 0; g <= 4; g++) {
+        const y = padT + (plotH * g) / 4;
+        svgInner += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#CBD5E1" stroke-dasharray="3,3"/><text x="${padL - 6}" y="${y + 4}" text-anchor="end" font-size="10" font-weight="700" fill="#475569">${Math.round(maxVal * (1 - g / 4)).toLocaleString('es-AR')}</text>`;
+      }
+      svgInner += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="#0D1117" stroke-width="2"/><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#0D1117" stroke-width="2"/>`;
+      const slotW = plotW / items.length, barW = Math.min(42, slotW * 0.62);
+      items.forEach((it, i) => {
+        const barH = (it.value / maxVal) * plotH, x = padL + slotW * i + (slotW - barW) / 2, y = padT + plotH - barH;
+        const etiqCorta = it.label.length > 9 ? it.label.slice(0, 8) + '…' : it.label;
+        svgInner += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${PALETA_GRAFICO[i % PALETA_GRAFICO.length]}" stroke="#0D1117" stroke-width="1.8"/><text x="${x + barW / 2}" y="${padT + plotH + 15}" text-anchor="middle" font-size="10" font-weight="800" fill="#0D1117">${etiqCorta}</text>`;
+      });
+    } else if (tipoGraficoActual === 'line') {
+      const padL = 54, padB = 34, padT = 18, padR = 20, plotW = W - padL - padR, plotH = H - padT - padB;
+      for (let g = 0; g <= 4; g++) {
+        const y = padT + (plotH * g) / 4;
+        svgInner += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#CBD5E1" stroke-dasharray="3,3"/><text x="${padL - 6}" y="${y + 4}" text-anchor="end" font-size="10" font-weight="700" fill="#475569">${Math.round(maxVal * (1 - g / 4)).toLocaleString('es-AR')}</text>`;
+      }
+      svgInner += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="#0D1117" stroke-width="2"/><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#0D1117" stroke-width="2"/>`;
+      const puntos = items.map((it, i) => ({ x: items.length === 1 ? padL + plotW / 2 : padL + (plotW * i) / (items.length - 1), y: padT + plotH - (it.value / maxVal) * plotH, it }));
+      svgInner += `<polyline fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${puntos.map(p => `${p.x},${p.y}`).join(' ')}"/>`;
+      puntos.forEach(p => {
+        const etiqCorta = p.it.label.length > 9 ? p.it.label.slice(0, 8) + '…' : p.it.label;
+        svgInner += `<circle cx="${p.x}" cy="${p.y}" r="5" fill="#FACC15" stroke="#0D1117" stroke-width="2"/><text x="${p.x}" y="${padT + plotH + 15}" text-anchor="middle" font-size="10" font-weight="800" fill="#0D1117">${etiqCorta}</text>`;
+      });
+    } else if (tipoGraficoActual === 'pie') {
+      const total = items.reduce((a, b) => a + b.value, 0) || 1, cx = W / 2, cy = H / 2, r = 82;
+      let anguloActual = -Math.PI / 2;
+      items.forEach((it, i) => {
+        const slice = (it.value / total) * Math.PI * 2;
+        const x1 = cx + r * Math.cos(anguloActual), y1 = cy + r * Math.sin(anguloActual);
+        const x2 = cx + r * Math.cos(anguloActual + slice), y2 = cy + r * Math.sin(anguloActual + slice);
+        const color = PALETA_GRAFICO[i % PALETA_GRAFICO.length];
+        if (items.length === 1) svgInner += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" stroke="#0D1117" stroke-width="2"/>`;
+        else svgInner += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${slice > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z" fill="${color}" stroke="#0D1117" stroke-width="2" stroke-linejoin="round"/>`;
+        anguloActual += slice;
+      });
+    }
+    const leyendaHTML = items.map((it, i) => `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${PALETA_GRAFICO[i % PALETA_GRAFICO.length]};"></span><span>${it.label}: ${it.value.toLocaleString('es-AR')}</span></span>`).join('');
+    qcalcChartCanvas.innerHTML = `<svg id="qcalcSvgExport" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${svgInner}</svg><div class="chart-legend">${leyendaHTML}</div>`;
+  }
+
+  document.getElementById('btnCalcChart').addEventListener('click', () => { const items = obtenerDatosGrafico(); if (!items.length) { hablar('Cargá etiquetas en Columna A y números en Columna B para graficar'); return; } qcalcChartTitle.value = qcalcTitle.value.trim() || 'Gráfico de datos'; qcalcChartPanel.classList.add('visible'); renderizarGraficoSVG(); });
+  document.querySelectorAll('[data-chart-type]').forEach(btn => btn.addEventListener('click', () => { tipoGraficoActual = btn.dataset.chartType; document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.toggle('activo', b === btn)); renderizarGraficoSVG(); }));
+  document.getElementById('btnDownloadChart').addEventListener('click', () => {
+    const svgEl = document.getElementById('qcalcSvgExport'); if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl), img = new Image();
+    const url = URL.createObjectURL(new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }));
+    img.onload = () => {
+      const canvas = document.createElement('canvas'); canvas.width = 720; canvas.height = 440;
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url);
+      const a = document.createElement('a'); a.download = `${(qcalcChartTitle.value.trim() || 'Grafico_Quipu')}.png`; a.href = canvas.toDataURL('image/png'); a.click();
+      hablar('Gráfico descargado en PNG');
+    };
+    img.src = url;
+  });
+  document.getElementById('btnCloseChart').addEventListener('click', () => qcalcChartPanel.classList.remove('visible'));
+  document.getElementById('btnCalcClear').addEventListener('click', borrarRangoSeleccionado);
+
+  function cargarEnQuipuCalculo(doc = null) {
+    qcalcChartPanel.classList.remove('visible'); hojaActivaIdx = 0;
+    if (doc) { docActivoId = doc.id; qcalcTitle.value = doc.nombre; libroHojas = doc.hojas ? JSON.parse(JSON.stringify(doc.hojas)) : [{ nombre: 'Hoja 1', celdas: JSON.parse(JSON.stringify(doc.celdas || {})) }]; qcalcSavedState.textContent = 'Guardado'; }
+    else { docActivoId = 'doc-' + Date.now(); qcalcTitle.value = 'Planilla sin título'; libroHojas = [{ nombre: 'Hoja 1', celdas: {} }]; qcalcSavedState.textContent = 'Nueva planilla'; }
+    renderizarPestanasHojas(); renderizarGrillaCalculo(); seleccionarCelda('A1');
+  }
+
+  document.getElementById('btnQcalcSave').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = qcalcTitle.value.trim() || 'Planilla sin título';
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const existente = documentos.find(d => d.id === docActivoId);
+    if (existente) { existente.nombre = nombre; existente.hojas = JSON.parse(JSON.stringify(libroHojas)); existente.cuando = `Hoy, ${hora}`; }
+    else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'calculo', cuando: `Hoy, ${hora}`, hojas: JSON.parse(JSON.stringify(libroHojas)) });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
+    await esperar(450); prender('verde'); qcalcSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardada`);
+  });
+
+  document.getElementById('btnQcalcXls').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = (qcalcTitle.value.trim() || 'Planilla_Quipu').replace(/[^\w\sáéíóúñÁÉÍÓÚÑ-]/g, '');
+    const hojaPrev = hojaActivaIdx;
+    let tablasHTML = '';
+
+    libroHojas.forEach((h, idx) => {
+      hojaActivaIdx = idx;
+      const calcDatos = h.celdas || {};
+      tablasHTML += `<h3>${h.nombre}</h3><table border="1">`;
+      for (let r = 1; r <= ROWS; r++) {
+        tablasHTML += '<tr>';
+        for (let c = 0; c < COLS; c++) {
+          const ref = `${colLetra(c)}${r}`, celda = calcDatos[ref] || {}, val = evaluarCelda(ref);
+          tablasHTML += `<td style="${celda.bg ? `background-color:${celda.bg};` : ''}${celda.bold ? 'font-weight:bold;' : ''}">${val === '' ? '' : val}</td>`;
+        }
+        tablasHTML += '</tr>';
+      }
+      tablasHTML += '</table><br>';
+    });
+    hojaActivaIdx = hojaPrev;
+
+    const blob = new Blob(['\ufeff', `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>${tablasHTML}</body></html>`], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${nombre}.xls`; a.click(); URL.revokeObjectURL(url);
+    await esperar(500); prender('verde'); hablar(`Descargando ${nombre}.xls`);
+  });
+
+  /* =========================================================
+     MÓDULO 3: QUIPUDIAPOSITIVAS (INTACTO)
+     ========================================================= */
+  const qslideTitle = document.getElementById('qslideTitle');
+  const qslideThumbs = document.getElementById('qslideThumbs');
+  const qslideCanvas = document.getElementById('qslideCanvas');
+  const qslideNotesInput = document.getElementById('qslideNotesInput');
+  const slideThemeSelect = document.getElementById('slideThemeSelect');
+  const slideTransitionSelect = document.getElementById('slideTransitionSelect');
+  const slideFontSize = document.getElementById('slideFontSize');
+  const qslideContextualBar = document.getElementById('qslideContextualBar');
+  const qslideWorkspace = document.getElementById('qslideWorkspace');
+  const qslideCommentsPanel = document.getElementById('qslideCommentsPanel');
+  const slideCommentsList = document.getElementById('slideCommentsList');
+  const qslideStats = document.getElementById('qslideStats');
+  const qslideSavedState = document.getElementById('qslideSavedState');
+
+  const TEMAS_SLIDE = {
+    light: { bg: '#FFFFFF', color: '#0D1117', hexBg: 'FFFFFF', hexColor: '0D1117' },
+    quipu: { bg: 'linear-gradient(135deg, #2C4875 0%, #4D74B0 100%)', color: '#FFFFFF', hexBg: '3B5E94', hexColor: 'FFFFFF' },
+    dark:  { bg: '#111827', color: '#F8FAFC', hexBg: '111827', hexColor: 'F8FAFC' },
+    warm:  { bg: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', color: '#0D1117', hexBg: 'FEF3C7', hexColor: '0D1117' }
+  };
+
+  let slidesList = [], slideIdx = 0, selectedItemId = null, dragThumbIdx = null, undoStack = [], redoStack = [];
+
+  function registrarHistorialSlides() {
+    undoStack.push(JSON.stringify(slidesList));
+    if (undoStack.length > 25) undoStack.shift();
+    redoStack = [];
+  }
+
+  document.getElementById('btnSlideUndo').addEventListener('click', () => {
+    if (!undoStack.length) { hablar('Nada para deshacer'); return; }
+    redoStack.push(JSON.stringify(slidesList));
+    slidesList = JSON.parse(undoStack.pop());
+    slideIdx = Math.min(slideIdx, slidesList.length - 1);
+    renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('btnSlideRedo').addEventListener('click', () => {
+    if (!redoStack.length) { hablar('Nada para rehacer'); return; }
+    undoStack.push(JSON.stringify(slidesList));
+    slidesList = JSON.parse(redoStack.pop());
+    slideIdx = Math.min(slideIdx, slidesList.length - 1);
+    renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('slideZoomSelect').addEventListener('change', e => {
+    const val = e.target.value;
+    if (val === 'fit') { qslideCanvas.style.width = '860px'; qslideCanvas.style.maxWidth = '100%'; }
+    else { qslideCanvas.style.maxWidth = 'none'; qslideCanvas.style.width = `${Math.round(860 * (Number(val) / 100))}px`; }
+  });
+
+  document.getElementById('slideBgColorPicker').addEventListener('input', e => {
+    registrarHistorialSlides(); slidesList[slideIdx].customBg = e.target.value; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('slideLayoutSelect').addEventListener('change', e => {
+    const dis = e.target.value; if (!dis) return;
+    registrarHistorialSlides();
+    const s = slidesList[slideIdx], col = (TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light).color;
+    if (dis === 'portada') {
+      s.items = [
+        { id: 'el-' + Date.now(), type: 'text', x: 10, y: 26, w: 80, h: 20, fontSize: 40, color: col, text: '<b>Título Principal</b>' },
+        { id: 'el-' + (Date.now() + 1), type: 'text', x: 15, y: 50, w: 70, h: 16, fontSize: 22, color: col, text: 'Subtítulo o autor de la presentación' }
+      ];
+    } else if (dis === 'titulo_texto') {
+      s.items = [
+        { id: 'el-' + Date.now(), type: 'text', x: 7, y: 8, w: 86, h: 16, fontSize: 32, color: col, text: '<b>Título de la diapositiva</b>' },
+        { id: 'el-' + (Date.now() + 1), type: 'text', x: 7, y: 28, w: 86, h: 56, fontSize: 22, color: col, text: '<ul><li>Primer punto importante</li><li>Segundo punto importante</li></ul>' }
+      ];
+    } else if (dis === 'dos_columnas') {
+      s.items = [
+        { id: 'el-' + Date.now(), type: 'text', x: 7, y: 8, w: 86, h: 15, fontSize: 30, color: col, text: '<b>Comparación en dos columnas</b>' },
+        { id: 'el-' + (Date.now() + 1), type: 'text', x: 7, y: 28, w: 41, h: 56, fontSize: 20, color: col, text: '<b>Columna 1</b><br>Escribí acá el contenido izquierdo…' },
+        { id: 'el-' + (Date.now() + 2), type: 'text', x: 52, y: 28, w: 41, h: 56, fontSize: 20, color: col, text: '<b>Columna 2</b><br>Escribí acá el contenido derecho…' }
+      ];
+    } else if (dis === 'blanco') s.items = [];
+    selectedItemId = null; renderizarElementosLienzo(); renderizarMiniaturasSlides(); e.target.value = '';
+  });
+
+  function actualizarBarraContextual() {
+    const s = slidesList[slideIdx], it = s?.items?.find(i => i.id === selectedItemId);
+    qslideContextualBar.classList.toggle('visible', Boolean(it));
+    if (it && it.fontSize) slideFontSize.value = String(it.fontSize);
+  }
+
+  function renderizarElementosLienzo() {
+    const s = slidesList[slideIdx]; if (!s) return;
+    const t = TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light;
+    qslideCanvas.style.background = s.customBg || t.bg; qslideCanvas.style.color = t.color;
+    qslideNotesInput.value = s.notas || ''; slideThemeSelect.value = s.tema || 'light'; slideTransitionSelect.value = s.transicion || 'none';
+    qslideStats.textContent = `Diapositiva ${slideIdx + 1} de ${slidesList.length}`;
+    actualizarBarraContextual(); renderizarComentariosSlide();
+
+    qslideCanvas.innerHTML = '';
+    (s.items || []).forEach(item => {
+      const box = document.createElement('div');
+      box.className = 'slide-item' + (item.id === selectedItemId ? ' seleccionado' : '');
+      box.dataset.itemId = item.id;
+      box.style.left = `${item.x}%`; box.style.top = `${item.y}%`; box.style.width = `${item.w}%`; box.style.height = `${item.h}%`;
+
+      const dragBar = document.createElement('div');
+      dragBar.className = 'slide-item-dragbar';
+      dragBar.innerHTML = `<span>✥ Mover</span><button type="button" class="slide-item-del" title="Eliminar">✕</button>`;
+      box.appendChild(dragBar);
+
+      if (item.type === 'text') {
+        const txt = document.createElement('div'); txt.className = 'slide-text-content'; txt.contentEditable = 'true';
+        txt.style.fontSize = `${item.fontSize || 24}px`; txt.style.color = item.color || t.color; txt.innerHTML = item.text || '';
+        txt.addEventListener('input', () => { item.text = txt.innerHTML; qslideSavedState.textContent = 'Cambios sin guardar…'; renderizarMiniaturasSlides(); });
+        box.appendChild(txt);
+      } else if (item.type === 'image') {
+        const img = document.createElement('img'); img.className = 'slide-img-content'; img.src = item.src; box.appendChild(img);
+      } else if (item.type === 'shape') {
+        const shp = document.createElement('div'); shp.className = 'slide-shape-content'; shp.contentEditable = 'true';
+        shp.style.background = item.bg || '#FDE047'; shp.style.color = '#0D1117'; shp.style.border = '2.5px solid #0D1117';
+        shp.style.borderRadius = item.shape === 'circle' ? '50%' : (item.shape === 'round' ? '16px' : '4px'); shp.innerHTML = item.text || '';
+        shp.addEventListener('input', () => { item.text = shp.innerHTML; qslideSavedState.textContent = 'Cambios sin guardar…'; });
+        box.appendChild(shp);
+      } else if (item.type === 'line') {
+        const ln = document.createElement('div'); ln.className = 'slide-line-content'; ln.style.background = item.bg || t.color; box.appendChild(ln);
+      }
+
+      const resizeHandle = document.createElement('div'); resizeHandle.className = 'slide-item-resize'; box.appendChild(resizeHandle);
+
+      box.addEventListener('mousedown', e => {
+        e.stopPropagation(); selectedItemId = item.id; actualizarBarraContextual();
+        qslideCanvas.querySelectorAll('.slide-item').forEach(el => el.classList.toggle('seleccionado', el.dataset.itemId === item.id));
+      });
+
+      dragBar.querySelector('.slide-item-del').addEventListener('click', e => {
+        e.stopPropagation(); registrarHistorialSlides(); s.items = s.items.filter(it => it.id !== item.id);
+        selectedItemId = null; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+      });
+
+      const iniciarArrastre = e => {
+        if (e.target.closest('.slide-item-del') || e.target.closest('.slide-item-resize')) return;
+        if (item.type === 'text' && !e.target.closest('.slide-item-dragbar')) return;
+        e.preventDefault(); registrarHistorialSlides();
+        const rectCanvas = qslideCanvas.getBoundingClientRect(), startX = e.clientX, startY = e.clientY, origX = item.x, origY = item.y;
+        const onMove = ev => {
+          item.x = Math.max(0, Math.min(100 - item.w, Number((origX + ((ev.clientX - startX) / rectCanvas.width) * 100).toFixed(1))));
+          item.y = Math.max(0, Math.min(100 - item.h, Number((origY + ((ev.clientY - startY) / rectCanvas.height) * 100).toFixed(1))));
+          box.style.left = `${item.x}%`; box.style.top = `${item.y}%`;
+        };
+        const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); qslideSavedState.textContent = 'Cambios sin guardar…'; renderizarMiniaturasSlides(); };
+        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+      };
+      dragBar.addEventListener('mousedown', iniciarArrastre);
+      if (item.type === 'image' || item.type === 'line') box.addEventListener('mousedown', iniciarArrastre);
+
+      resizeHandle.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation(); registrarHistorialSlides();
+        const rectCanvas = qslideCanvas.getBoundingClientRect(), startX = e.clientX, startY = e.clientY, origW = item.w, origH = item.h;
+        const onMove = ev => {
+          item.w = Math.max(6, Math.min(100 - item.x, Number((origW + ((ev.clientX - startX) / rectCanvas.width) * 100).toFixed(1))));
+          item.h = Math.max(4, Math.min(100 - item.y, Number((origH + ((ev.clientY - startY) / rectCanvas.height) * 100).toFixed(1))));
+          box.style.width = `${item.w}%`; box.style.height = `${item.h}%`;
+        };
+        const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); qslideSavedState.textContent = 'Cambios sin guardar…'; renderizarMiniaturasSlides(); };
+        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+      });
+
+      qslideCanvas.appendChild(box);
+    });
+
+    const stamp = document.createElement('div'); stamp.className = 'slide-footer-stamp'; stamp.textContent = `${slideIdx + 1} / ${slidesList.length}`;
+    qslideCanvas.appendChild(stamp);
+  }
+
+  qslideCanvas.addEventListener('mousedown', e => {
+    if (e.target === qslideCanvas) { selectedItemId = null; actualizarBarraContextual(); qslideCanvas.querySelectorAll('.slide-item').forEach(el => el.classList.remove('seleccionado')); }
+  });
+
+  function moverDiapositiva(desde, hacia) {
+    if (hacia < 0 || hacia >= slidesList.length || desde === hacia) return;
+    registrarHistorialSlides();
+    const [movida] = slidesList.splice(desde, 1); slidesList.splice(hacia, 0, movida); slideIdx = hacia;
+    renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  }
+
+  function renderizarMiniaturasSlides() {
+    qslideThumbs.innerHTML = slidesList.map((s, idx) => {
+      const t = TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light;
+      const primerTexto = (s.items || []).find(it => it.type === 'text')?.text?.replace(/<[^>]+>/g, '') || `Diapositiva ${idx + 1}`;
+      return `
+        <div class="slide-thumb-card ${idx === slideIdx ? 'activa' : ''}" draggable="true" data-sidx="${idx}">
+          <div class="slide-thumb-num">
+            <span>#${idx + 1}</span>
+            <span class="thumb-move-btns">
+              <button type="button" class="thumb-move-btn btn-slide-up">▲</button>
+              <button type="button" class="thumb-move-btn btn-slide-down">▼</button>
+            </span>
+          </div>
+          <div class="slide-thumb-preview" style="background:${s.customBg || t.bg};color:${t.color};">
+            <strong>${primerTexto.slice(0, 32)}</strong>
+          </div>
+        </div>`;
+    }).join('');
+
+    qslideThumbs.querySelectorAll('.slide-thumb-card').forEach(card => {
+      const idx = Number(card.dataset.sidx);
+      card.addEventListener('click', e => {
+        if (e.target.closest('.btn-slide-up')) { moverDiapositiva(idx, idx - 1); return; }
+        if (e.target.closest('.btn-slide-down')) { moverDiapositiva(idx, idx + 1); return; }
+        slideIdx = idx; selectedItemId = null; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+      });
+      card.addEventListener('dragstart', () => { dragThumbIdx = idx; card.classList.add('dragging'); });
+      card.addEventListener('dragend', () => { card.classList.remove('dragging'); qslideThumbs.querySelectorAll('.slide-thumb-card').forEach(c => c.classList.remove('drag-over')); });
+      card.addEventListener('dragover', e => { e.preventDefault(); card.classList.add('drag-over'); });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+      card.addEventListener('drop', e => { e.preventDefault(); if (dragThumbIdx !== null && dragThumbIdx !== idx) moverDiapositiva(dragThumbIdx, idx); dragThumbIdx = null; });
+    });
+  }
+
+  document.getElementById('btnSlideAddText').addEventListener('click', () => {
+    registrarHistorialSlides(); const s = slidesList[slideIdx];
+    const nuevo = { id: 'el-' + Date.now(), type: 'text', x: 15, y: 25, w: 60, h: 18, fontSize: 24, color: (TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light).color, text: 'Escribí tu texto acá…' };
+    s.items.push(nuevo); selectedItemId = nuevo.id; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('btnSlideAddLine').addEventListener('click', () => {
+    registrarHistorialSlides(); const s = slidesList[slideIdx];
+    const nuevo = { id: 'el-' + Date.now(), type: 'line', x: 10, y: 48, w: 80, h: 5, bg: (TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light).color };
+    s.items.push(nuevo); selectedItemId = nuevo.id; renderizarElementosLienzo();
+  });
+
+  const qslideImgInput = document.getElementById('qslideImgInput');
+  document.getElementById('btnSlideInsertImg').addEventListener('click', () => qslideImgInput.click());
+  qslideImgInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      registrarHistorialSlides(); const s = slidesList[slideIdx];
+      const nuevo = { id: 'el-' + Date.now(), type: 'image', x: 25, y: 22, w: 45, h: 48, src: ev.target.result };
+      s.items.push(nuevo); selectedItemId = nuevo.id; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+    };
+    reader.readAsDataURL(file); e.target.value = '';
+  });
+
+  document.getElementById('slideShapeSelect').addEventListener('change', e => {
+    const forma = e.target.value; if (!forma) return;
+    registrarHistorialSlides(); const s = slidesList[slideIdx];
+    const nuevo = { id: 'el-' + Date.now(), type: 'shape', shape: forma, x: 30, y: 30, w: forma === 'circle' ? 24 : 36, h: forma === 'circle' ? 42 : 24, bg: '#FDE047', text: 'Texto' };
+    s.items.push(nuevo); selectedItemId = nuevo.id; renderizarElementosLienzo(); renderizarMiniaturasSlides(); e.target.value = '';
+  });
+
+  function renderizarComentariosSlide() {
+    const coms = slidesList[slideIdx]?.comentarios || [];
+    slideCommentsList.innerHTML = coms.length ? coms.map(c => `<div style="background:#FEF9C3;border:1.5px solid #0D1117;border-radius:8px;padding:6px 8px;">${c}</div>`).join('') : '<p style="color:#64748B;">Sin comentarios en esta diapositiva.</p>';
+  }
+  document.getElementById('btnSlideComments').addEventListener('click', () => { const ab = qslideCommentsPanel.classList.toggle('visible'); qslideWorkspace.classList.toggle('con-comentarios', ab); });
+  document.getElementById('btnCloseComments').addEventListener('click', () => { qslideCommentsPanel.classList.remove('visible'); qslideWorkspace.classList.remove('con-comentarios'); });
+  document.getElementById('btnAddSlideComment').addEventListener('click', () => {
+    const inp = document.getElementById('newSlideCommentInput'), txt = inp.value.trim(); if (!txt) return;
+    if (!slidesList[slideIdx].comentarios) slidesList[slideIdx].comentarios = [];
+    slidesList[slideIdx].comentarios.push(txt); inp.value = ''; renderizarComentariosSlide();
+  });
+
+  slideFontSize.addEventListener('change', e => { const it = slidesList[slideIdx]?.items?.find(i => i.id === selectedItemId); if (it && it.type === 'text') { it.fontSize = Number(e.target.value); renderizarElementosLienzo(); } });
+  document.getElementById('slideTextColor').addEventListener('input', e => { document.execCommand('foreColor', false, e.target.value); const it = slidesList[slideIdx]?.items?.find(i => i.id === selectedItemId); if (it && it.type === 'text') it.color = e.target.value; });
+  document.getElementById('slideFillColor').addEventListener('input', e => { const it = slidesList[slideIdx]?.items?.find(i => i.id === selectedItemId); if (it && (it.type === 'shape' || it.type === 'line')) { it.bg = e.target.value; renderizarElementosLienzo(); } });
+  document.getElementById('btnDeleteSelectedSlideItem').addEventListener('click', () => { const s = slidesList[slideIdx]; s.items = s.items.filter(i => i.id !== selectedItemId); selectedItemId = null; renderizarElementosLienzo(); renderizarMiniaturasSlides(); });
+  document.querySelectorAll('[data-slide-cmd]').forEach(btn => btn.addEventListener('click', () => document.execCommand(btn.dataset.slideCmd, false, null)));
+
+  qslideNotesInput.addEventListener('input', () => { if (slidesList[slideIdx]) slidesList[slideIdx].notas = qslideNotesInput.value; });
+  slideThemeSelect.addEventListener('change', e => { registrarHistorialSlides(); slidesList[slideIdx].tema = e.target.value; slidesList[slideIdx].customBg = null; renderizarElementosLienzo(); renderizarMiniaturasSlides(); });
+  slideTransitionSelect.addEventListener('change', e => { slidesList[slideIdx].transicion = e.target.value; renderizarMiniaturasSlides(); });
+
+  document.getElementById('btnSlideAdd').addEventListener('click', () => {
+    registrarHistorialSlides();
+    slidesList.splice(slideIdx + 1, 0, {
+      tema: slidesList[slideIdx]?.tema || 'light', transicion: 'fade', notas: '', comentarios: [],
+      items: [{ id: 'el-' + Date.now(), type: 'text', x: 8, y: 12, w: 84, h: 16, fontSize: 32, color: (TEMAS_SLIDE[slidesList[slideIdx]?.tema || 'light']).color, text: `<b>Diapositiva ${slidesList.length + 1}</b>` }]
+    });
+    slideIdx++; selectedItemId = null; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('btnSlideDup').addEventListener('click', () => {
+    registrarHistorialSlides();
+    const copia = JSON.parse(JSON.stringify(slidesList[slideIdx]));
+    copia.items.forEach(it => it.id = 'el-' + Math.random().toString(36).slice(2, 8));
+    slidesList.splice(slideIdx + 1, 0, copia); slideIdx++; renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  document.getElementById('btnSlideDel').addEventListener('click', () => {
+    if (slidesList.length <= 1) { hablar('Debe quedar al menos 1 diapositiva'); return; }
+    registrarHistorialSlides(); slidesList.splice(slideIdx, 1); slideIdx = Math.max(0, slideIdx - 1); selectedItemId = null;
+    renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  });
+
+  function cargarEnQuipuDiapos(doc = null) {
+    slideIdx = 0; selectedItemId = null; undoStack = []; redoStack = [];
+    if (doc) { docActivoId = doc.id; qslideTitle.value = doc.nombre; slidesList = JSON.parse(JSON.stringify(doc.slides || [])); qslideSavedState.textContent = 'Guardado'; }
+    else {
+      docActivoId = 'doc-' + Date.now(); qslideTitle.value = 'Presentación sin título';
+      slidesList = [{ tema: 'quipu', transicion: 'fade', notas: '', comentarios: [], items: [{ id: 'el-1', type: 'text', x: 10, y: 24, w: 80, h: 20, fontSize: 38, color: '#FFFFFF', text: '<b>Título de la presentación</b>' }, { id: 'el-2', type: 'text', x: 10, y: 48, w: 80, h: 16, fontSize: 22, color: '#E2E8F0', text: 'Subtítulo o nombre del expositor' }] }];
+      qslideSavedState.textContent = 'Nueva presentación';
+    }
+    renderizarElementosLienzo(); renderizarMiniaturasSlides();
+  }
+
+  document.getElementById('btnQslideSave').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = qslideTitle.value.trim() || 'Presentación sin título';
+    const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const existente = documentos.find(d => d.id === docActivoId);
+    if (existente) { existente.nombre = nombre; existente.slides = JSON.parse(JSON.stringify(slidesList)); existente.cuando = `Hoy, ${hora}`; }
+    else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'diapo', cuando: `Hoy, ${hora}`, slides: JSON.parse(JSON.stringify(slidesList)) });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
+    await esperar(450); prender('verde'); qslideSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardada`);
+  });
+
+  document.getElementById('btnQslidePptx').addEventListener('click', async () => {
+    prender('amarillo');
+    const nombre = (qslideTitle.value.trim() || 'Presentacion_Quipu').replace(/[^\w\sáéíóúñÁÉÍÓÚÑ-]/g, '');
+    if (typeof PptxGenJS === 'undefined') { hablar('No se pudo cargar el generador PPTX (revisá tu conexión)'); prender('verde'); return; }
+    const pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_16x9';
+    slidesList.forEach(s => {
+      const slide = pptx.addSlide(), t = TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light;
+      slide.background = { color: s.customBg ? s.customBg.replace('#', '') : t.hexBg };
+      (s.items || []).forEach(it => {
+        const xIn = (it.x / 100) * 10, yIn = (it.y / 100) * 5.625, wIn = (it.w / 100) * 10, hIn = (it.h / 100) * 5.625;
+        if (it.type === 'text') {
+          const plain = (it.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          slide.addText(plain, { x: xIn, y: yIn, w: wIn, h: hIn, fontSize: Math.round((it.fontSize || 24) * 0.75), color: (it.color || '#' + t.hexColor).replace('#', ''), valign: 'top' });
+        } else if (it.type === 'image' && it.src) slide.addImage({ data: it.src, x: xIn, y: yIn, w: wIn, h: hIn });
+        else if (it.type === 'shape') slide.addShape(it.shape === 'circle' ? pptx.ShapeType.ellipse : pptx.ShapeType.rect, { x: xIn, y: yIn, w: wIn, h: hIn, fill: { color: (it.bg || '#FDE047').replace('#', '') }, line: { color: '0D1117', width: 1.5 } });
+      });
+      if (s.notas) slide.addNotes(s.notas);
+    });
+    await pptx.writeFile({ fileName: `${nombre}.pptx` }); prender('verde'); hablar(`Archivo ${nombre}.pptx descargado`);
+  });
+
+  function renderSlideHTMLItems(s) {
+    return (s.items || []).map(it => {
+      const baseStyle = `position:absolute;left:${it.x}%;top:${it.y}%;width:${it.w}%;height:${it.h}%;`;
+      if (it.type === 'text') return `<div style="${baseStyle}font-size:${it.fontSize || 24}px;color:${it.color || 'inherit'};">${it.text}</div>`;
+      if (it.type === 'image') return `<img src="${it.src}" style="${baseStyle}object-fit:contain;">`;
+      if (it.type === 'shape') {
+        const rad = it.shape === 'circle' ? '50%' : (it.shape === 'round' ? '16px' : '4px');
+        return `<div style="${baseStyle}background:${it.bg || '#FDE047'};color:#0D1117;border:2.5px solid #0D1117;border-radius:${rad};display:flex;align-items:center;justify-content:center;font-weight:800;">${it.text || ''}</div>`;
+      }
+      if (it.type === 'line') return `<div style="${baseStyle}height:4px;background:${it.bg || 'currentColor'};"></div>`;
+      return '';
+    }).join('');
+  }
+
+  const presentOverlay = document.getElementById('presentOverlay'), presentStage = document.getElementById('presentStage'), presentCounter = document.getElementById('presentCounter');
+  let presentIdx = 0;
+  function mostrarDiapoEnVivo(idx) {
+    presentIdx = idx; const s = slidesList[presentIdx], t = TEMAS_SLIDE[s.tema] || TEMAS_SLIDE.light;
+    presentStage.className = 'present-stage'; void presentStage.offsetWidth;
+    if (s.transicion && s.transicion !== 'none') presentStage.classList.add(`anim-${s.transicion}`);
+    presentStage.style.background = s.customBg || t.bg; presentStage.style.color = t.color;
+    presentStage.innerHTML = renderSlideHTMLItems(s); presentCounter.textContent = `${presentIdx + 1} / ${slidesList.length}`;
+  }
+
+  document.getElementById('btnSlidePresent').addEventListener('click', () => { presentOverlay.classList.add('activo'); mostrarDiapoEnVivo(slideIdx); if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); });
+  function cerrarPresentacion() { presentOverlay.classList.remove('activo'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }
+  document.getElementById('btnPresPrev').addEventListener('click', () => { if (presentIdx > 0) mostrarDiapoEnVivo(presentIdx - 1); });
+  document.getElementById('btnPresNext').addEventListener('click', () => { if (presentIdx < slidesList.length - 1) mostrarDiapoEnVivo(presentIdx + 1); else cerrarPresentacion(); });
+  document.getElementById('btnPresExit').addEventListener('click', cerrarPresentacion);
+
+  document.addEventListener('keydown', e => {
+    if (!presentOverlay.classList.contains('activo')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ') { if (presentIdx < slidesList.length - 1) mostrarDiapoEnVivo(presentIdx + 1); else cerrarPresentacion(); }
+    else if (e.key === 'ArrowLeft') { if (presentIdx > 0) mostrarDiapoEnVivo(presentIdx - 1); }
+    else if (e.key === 'Escape') cerrarPresentacion();
+  });
+
+  /* ===== Apertura desde el Recibidor y desde Mis documentos ===== */
+  document.querySelectorAll('.tecla').forEach(t => t.addEventListener('click', async () => {
+    t.classList.add('apretada'); setTimeout(() => t.classList.remove('apretada'), 140);
+    await procesando();
+    if (t.dataset.abrir === 'texto') cargarEnQuipuTexto(null);
+    if (t.dataset.abrir === 'calculo') cargarEnQuipuCalculo(null);
+    if (t.dataset.abrir === 'diapo') cargarEnQuipuDiapos(null);
+    abrirVista(t.dataset.abrir, 'Quipu Office'); hablar(`Abriendo ${t.dataset.programa}…`);
+  }));
+
+  lista.addEventListener('click', async e => {
+    const a = e.target.closest('.archivo'); if (!a) return;
+    await procesando();
+    const doc = documentos.find(d => d.id === a.dataset.id);
+    if (a.dataset.tipo === 'carpeta') { abrirVista('carpetas', 'Quipu Office'); hablar(`Carpeta “${a.dataset.nombre}”`); }
+    else {
+      if (a.dataset.tipo === 'texto') cargarEnQuipuTexto(doc);
+      if (a.dataset.tipo === 'calculo') cargarEnQuipuCalculo(doc);
+      if (a.dataset.tipo === 'diapo') cargarEnQuipuDiapos(doc);
+      abrirVista(a.dataset.tipo, 'Quipu Office'); hablar(`Abriendo “${a.dataset.nombre}”`);
+    }
+  });
+
+  const btnSync = document.getElementById('btnSync'), syncTexto = document.getElementById('syncTexto'), syncHora = document.getElementById('syncHora');
+  btnSync.addEventListener('click', async () => {
+    if (googleAccessToken) { subirRespaldoAGoogleDrive(); return; }
+    if (btnSync.classList.contains('ocupado')) return;
+    btnSync.classList.add('ocupado'); syncTexto.textContent = 'Sincronizando…'; prender('amarillo');
+    await esperar(1000);
+    btnSync.classList.remove('ocupado'); syncTexto.textContent = 'Sincronizado'; syncHora.textContent = 'en este equipo';
+    prender('verde'); abrirVista('drive', 'Quipu Office'); hablar('Conectá tu cuenta en Drive para sincronizar en la nube');
+  });
+
+  document.getElementById('btnCerrar').addEventListener('click', async () => {
+    detenerLectura(); prender('rojo'); hablar('Cerrando Quipu Office…');
+    await esperar(600); window.close();
+    setTimeout(() => { abrirVista('inicio', 'Quipu Office'); prender('verde'); }, 900);
+  });
+
+  parlante.addEventListener('click', () => hablar('¡Hola! Soy Quipu Office'));
+});
+</script>
+</body>
+</html>
