@@ -1452,28 +1452,83 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnGoogleSignInLabel = document.getElementById('btnGoogleSignInLabel');
   const btnDriveUploadNow = document.getElementById('btnDriveUploadNow');
 
+    // ID del archivo de respaldo en Drive (se recuerda para no buscarlo cada vez)
+  const DRIVE_FILE_ID_KEY = 'quipu_office_drive_file_id';
+  const NOMBRE_RESPALDO = 'QuipuOffice_Backup.json';
+
+  // Busca en Drive el archivo de respaldo que creó la app.
+  // Con el permiso drive.file, Google solo muestra archivos creados por Quipu Office.
+  async function buscarRespaldoEnDrive() {
+    const consulta = encodeURIComponent(`name='${NOMBRE_RESPALDO}' and trashed=false`);
+    const resp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${consulta}&orderBy=modifiedTime desc&fields=files(id)&pageSize=1`,
+      { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+    );
+    if (!resp.ok) throw new Error('No se pudo buscar en Drive');
+    const datos = await resp.json();
+    return datos.files && datos.files.length ? datos.files[0].id : null;
+  }
+
+  // Sube el contenido: si ya hay archivo lo actualiza, si no, crea uno nuevo
+  async function enviarRespaldo(fileId, contenido) {
+    const metadata = fileId
+      ? {}  // al actualizar no cambiamos nombre ni ubicación
+      : { name: NOMBRE_RESPALDO, mimeType: 'application/json' };
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', new Blob([contenido], { type: 'application/json' }));
+
+    const url = fileId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart&fields=id`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id';
+
+    return fetch(url, {
+      method: fileId ? 'PATCH' : 'POST',
+      headers: { Authorization: `Bearer ${googleAccessToken}` },
+      body: form
+    });
+  }
+
   async function subirRespaldoAGoogleDrive() {
     if (!googleAccessToken) return;
     prender('amarillo');
     syncTexto.textContent = 'Subiendo a Drive…';
     try {
-      const metadata = { name: 'QuipuOffice_Backup.json', mimeType: 'application/json' };
       const contenido = JSON.stringify({ app: 'Quipu Office', fecha: new Date().toISOString(), documentos });
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', new Blob([contenido], { type: 'application/json' }));
 
-      const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${googleAccessToken}` },
-        body: form
-      });
-      if (resp.ok) {
-        prender('verde');
-        syncTexto.textContent = 'Sincronizado';
-        syncHora.textContent = 'en Google Drive';
-        hablar('¡Documentos guardados en tu Google Drive!');
-      } else throw new Error('Error en Drive');
+      // 1. Usar el ID guardado; si no hay, buscar el archivo en Drive
+      let fileId = localStorage.getItem(DRIVE_FILE_ID_KEY);
+      if (!fileId) fileId = await buscarRespaldoEnDrive();
+
+      // 2. Actualizar (o crear si no existe)
+      let resp = await enviarRespaldo(fileId, contenido);
+
+      // 3. Si el usuario borró el archivo de Drive, el ID ya no sirve: crear uno nuevo
+      if (resp.status === 404 && fileId) {
+        localStorage.removeItem(DRIVE_FILE_ID_KEY);
+        resp = await enviarRespaldo(null, contenido);
+      }
+
+      // 4. Sesión vencida (el permiso de Google dura una hora)
+      if (resp.status === 401) {
+        googleAccessToken = null;
+        prender('rojo');
+        syncTexto.textContent = 'Sesión vencida';
+        hablar('Tu sesión de Google venció. Volvé a conectar Drive para seguir sincronizando');
+        return;
+      }
+
+      if (!resp.ok) throw new Error('Error en Drive');
+
+      // 5. Guardar el ID para la próxima vez
+      const datos = await resp.json();
+      localStorage.setItem(DRIVE_FILE_ID_KEY, datos.id);
+
+      prender('verde');
+      syncTexto.textContent = 'Sincronizado';
+      syncHora.textContent = 'en Google Drive';
+      hablar('¡Documentos guardados en tu Google Drive!');
     } catch {
       prender('rojo');
       hablar('No se pudo subir a Drive en este momento');
