@@ -1552,37 +1552,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Junta los documentos de este equipo con los de Drive: se queda con la versión
+  // más nueva de cada uno (según "actualizado") y suma los que falten de cada lado
+  function juntarDocumentos(locales, remotos) {
+    const resultado = locales.slice();
+    for (const rd of remotos) {
+      const i = resultado.findIndex(d => d.id === rd.id);
+      if (i === -1) resultado.unshift(rd);
+      else if ((rd.actualizado || 0) > (resultado[i].actualizado || 0)) resultado[i] = rd;
+    }
+    return resultado;
+  }
+
+  // Lee el respaldo que está en Drive (o null si no existe)
+  async function leerRespaldoDeDrive(fileId) {
+    const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: { Authorization: `Bearer ${googleAccessToken}` }
+    });
+    if (resp.status === 404) return null;
+    if (resp.status === 401) throw new Error('SESION_VENCIDA');
+    if (!resp.ok) throw new Error('No se pudo leer el respaldo de Drive');
+    return resp.json();
+  }
+
+  function avisarSesionVencida() {
+    googleAccessToken = null;
+    prender('rojo');
+    btnSync.classList.add('desconectado');
+    syncTexto.textContent = 'Sesión vencida';
+    syncHora.textContent = 'volvé a conectar Drive';
+    hablar('Tu sesión de Google venció. Volvé a conectar Drive para seguir sincronizando');
+  }
+
   async function subirRespaldoAGoogleDrive() {
     if (!googleAccessToken) return;
     prender('amarillo');
-    syncTexto.textContent = 'Subiendo a Drive…';
+    syncTexto.textContent = 'Sincronizando…';
     try {
-      const contenido = JSON.stringify({ app: 'Quipu Office', fecha: new Date().toISOString(), documentos });
-
       // 1. Usar el ID guardado; si no hay, buscar el archivo en Drive
       let fileId = localStorage.getItem(DRIVE_FILE_ID_KEY);
       if (!fileId) fileId = await buscarRespaldoEnDrive();
 
-      // 2. Actualizar (o crear si no existe)
-      let resp = await enviarRespaldo(fileId, contenido);
+      // 2. Traer lo que hay en Drive y juntarlo con lo de este equipo (antes solo se subía y se pisaba)
+      if (fileId) {
+        let remoto = await leerRespaldoDeDrive(fileId);
+        if (!remoto) {
+          // El ID guardado ya no existe en Drive: buscar de nuevo
+          localStorage.removeItem(DRIVE_FILE_ID_KEY);
+          fileId = await buscarRespaldoEnDrive();
+          remoto = fileId ? await leerRespaldoDeDrive(fileId) : null;
+        }
+        if (remoto && Array.isArray(remoto.documentos)) {
+          documentos = juntarDocumentos(documentos, remoto.documentos);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos));
+          renderRecientes();
+        }
+      }
 
-      // 3. Si el usuario borró el archivo de Drive, el ID ya no sirve: crear uno nuevo
+      // 3. Subir la lista ya juntada (actualiza el mismo archivo, o lo crea si no existe)
+      const contenido = JSON.stringify({ app: 'Quipu Office', fecha: new Date().toISOString(), documentos });
+      let resp = await enviarRespaldo(fileId, contenido);
       if (resp.status === 404 && fileId) {
         localStorage.removeItem(DRIVE_FILE_ID_KEY);
         resp = await enviarRespaldo(null, contenido);
       }
 
       // 4. Sesión vencida (el permiso de Google dura una hora)
-      if (resp.status === 401) {
-        googleAccessToken = null;
-        prender('rojo');
-        btnSync.classList.add('desconectado');
-        syncTexto.textContent = 'Sesión vencida';
-        syncHora.textContent = 'volvé a conectar Drive';
-        hablar('Tu sesión de Google venció. Volvé a conectar Drive para seguir sincronizando');
-        return;
-      }
-
+      if (resp.status === 401) { avisarSesionVencida(); return; }
       if (!resp.ok) throw new Error('Error en Drive');
 
       // 5. Guardar el ID para la próxima vez
@@ -1593,10 +1629,11 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSync.classList.remove('desconectado');
       syncTexto.textContent = 'Sincronizado';
       syncHora.textContent = 'en Google Drive';
-      hablar('¡Documentos guardados en tu Google Drive!');
-    } catch {
+      hablar('¡Documentos sincronizados con tu Google Drive!');
+    } catch (err) {
+      if (err && err.message === 'SESION_VENCIDA') { avisarSesionVencida(); return; }
       prender('rojo');
-      hablar('No se pudo subir a Drive en este momento');
+      hablar('No se pudo sincronizar con Drive en este momento');
     }
   }
 
@@ -1998,6 +2035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const numPaginaVal = btnTogglePageNum.classList.contains('activo');
     if (existente) { existente.nombre = nombre; existente.paginas = paginasArr; existente.encabezado = encabezadoVal; existente.pie = pieVal; existente.numPagina = numPaginaVal; existente.cuando = `Hoy, ${hora}`; }
     else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'texto', cuando: `Hoy, ${hora}`, paginas: paginasArr, encabezado: encabezadoVal, pie: pieVal, numPagina: numPaginaVal });
+        (existente || documentos[0]).actualizado = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
     await esperar(450); prender('verde'); qtextSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardado`);
   });
@@ -2494,6 +2532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const existente = documentos.find(d => d.id === docActivoId);
     if (existente) { existente.nombre = nombre; existente.hojas = JSON.parse(JSON.stringify(libroHojas)); existente.cuando = `Hoy, ${hora}`; }
     else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'calculo', cuando: `Hoy, ${hora}`, hojas: JSON.parse(JSON.stringify(libroHojas)) });
+        (existente || documentos[0]).actualizado = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
     await esperar(450); prender('verde'); qcalcSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardada`);
   });
@@ -2836,6 +2875,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const existente = documentos.find(d => d.id === docActivoId);
     if (existente) { existente.nombre = nombre; existente.slides = JSON.parse(JSON.stringify(slidesList)); existente.cuando = `Hoy, ${hora}`; }
     else documentos.unshift({ id: docActivoId || 'doc-' + Date.now(), nombre, tipo: 'diapo', cuando: `Hoy, ${hora}`, slides: JSON.parse(JSON.stringify(slidesList)) });
+        (existente || documentos[0]).actualizado = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos)); renderRecientes();
     await esperar(450); prender('verde'); qslideSavedState.textContent = `Guardado a las ${hora}`; hablar(`“${nombre}” guardada`);
   });
