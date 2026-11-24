@@ -713,6 +713,23 @@ svg.corner-br { bottom: -3px; right: -3px; transform: scale(-1,-1); }
   .estado-sync { padding: 6px; } .estado-sync small { display: none; }
   .cajon-btn { flex-direction: column; gap: 2px; font-size: .72rem; padding: 4px 6px; }
 }
+
+/* ===== Compu con pantalla baja (notebook, o monitor con barras del navegador) ===== */
+/* Carcasa más finita y cinta más compacta, para que la hoja tenga más alto */
+@media (pointer: fine) and (max-height: 900px) {
+  .quipu-device { padding-top: 8px; padding-bottom: 8px; }
+  .device-header, .device-footer { zoom: 0.7; }
+  svg.corner { width: 58px; height: 58px; }
+  .side-rail { top: 52px; bottom: 52px; }
+  #vista-texto.activa, #vista-calculo.activa, #vista-diapo.activa { padding: 8px 14px 6px; }
+  .mod-topbar { margin-bottom: 6px; }
+  .mod-ribbon { padding: 4px 6px; gap: 4px; margin-bottom: 6px; }
+  .rib-tool { height: 31px; min-width: 31px; padding: 0 7px; font-size: .8rem; }
+  .rib-select { height: 31px; font-size: .8rem; }
+  .q-btn, .btn-volver-office { padding: 4px 10px; font-size: .86rem; }
+  .mod-title-input { padding: 4px 10px; }
+  .mod-statusbar { margin-top: 4px; }
+}
 </style>
 </head>
 <script>
