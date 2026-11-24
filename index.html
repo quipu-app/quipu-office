@@ -1438,16 +1438,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelectorAll('[data-vista]').forEach(btn => {
-    btn.addEventListener('click', async () => {
+  btn.addEventListener('click', async () => {
       detenerLectura();
       await procesando();
       abrirVista(btn.dataset.vista, 'Quipu Office');
     });
-    
-  // Al abrir la app, mostrar directamente los tres programas
-  abrirVista('recibidor', 'Quipu Office');
   });
 
+  // Al abrir la app, mostrar directamente los tres programas
+  abrirVista('recibidor', 'Quipu Office');
   /* ===== CARPETAS Y GOOGLE DRIVE ===== */
   document.getElementById('btnCreateFolder').addEventListener('click', () => {
     const inp = document.getElementById('newFolderName');
