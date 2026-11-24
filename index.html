@@ -138,6 +138,7 @@ svg.corner-br { bottom: -3px; right: -3px; transform: scale(-1,-1); }
 .estado-sync:active { transform: translateY(1.5px); box-shadow: 0 .5px 0 var(--ink); }
 .punto { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); background: var(--led-green); flex-shrink: 0; }
 .estado-sync.ocupado .punto { background: var(--led-yellow); animation: titila .6s steps(2) infinite; }
+.estado-sync.desconectado .punto { background: #B8C2CC; }
 @keyframes titila { 50% { opacity: .35; } }
 .estado-sync small { display: block; font-weight: 700; color: #3A4C60; font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cajon-sep { height: 2px; background: rgba(13,17,23,.25); margin: 4px 2px; border-radius: 2px; }
@@ -702,9 +703,9 @@ svg.corner-br { bottom: -3px; right: -3px; transform: scale(-1,-1); }
 
         <!-- Cajón lateral -->
         <nav class="cajon" aria-label="Cajón">
-          <button class="estado-sync" id="btnSync" type="button" title="Sincronizar con Google Drive">
+          <button class="estado-sync desconectado" id="btnSync" type="button" title="Sincronizar con Google Drive">
             <span class="punto" id="syncDot"></span>
-            <span><span id="syncTexto">Sincronizado</span><small id="syncHora">con Google Drive</small></span>
+            <span><span id="syncTexto">Sin conectar</span><small id="syncHora">a Google Drive</small></span>
           </button>
           <div class="cajon-sep"></div>
           <button class="cajon-btn" type="button" data-vista="inicio" aria-current="page">
@@ -1321,7 +1322,14 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'doc-8', nombre: 'Recetas', tipo: 'carpeta', cuando: '5 archivos' }
   ];
 
-  let documentos = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DOCS_INICIALES;
+    // La app arranca vacía. Además, borra una sola vez los ejemplos que quedaron guardados de versiones anteriores
+  const IDS_EJEMPLO = DOCS_INICIALES.map(d => d.id);
+  let documentos = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || [];
+  if (!localStorage.getItem('quipu_office_sin_ejemplos')) {
+    documentos = documentos.filter(d => !IDS_EJEMPLO.includes(d.id));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(documentos));
+    localStorage.setItem('quipu_office_sin_ejemplos', '1');
+  }
   let docActivoId = null;
 
   const EXT = { texto: '.qtext', calculo: '.qcalc', diapo: '.pptx' };
@@ -1344,7 +1352,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const foldersGrid = document.getElementById('foldersGrid');
 
   function renderRecientes() {
-    lista.innerHTML = documentos.map(a => `
+    lista.innerHTML = documentos.length === 0
+      ? '<p style="font-weight:700;color:#3A4C60;">Todavía no creaste documentos. Tocá la placa “Quipu Office” de arriba para elegir un programa.</p>'
+      : documentos.map(a => `
       <button class="archivo" type="button" data-id="${a.id}" data-nombre="${a.nombre}" data-tipo="${a.tipo}">
         <span class="hoja">${icono(a.tipo)}${a.tipo !== 'carpeta' ? `<span class="etiqueta et-${a.tipo}">${EXT[a.tipo]}</span>` : ''}</span>
         <b>${a.nombre}</b><small>${a.cuando}</small>
@@ -1433,6 +1443,9 @@ document.addEventListener('DOMContentLoaded', () => {
       await procesando();
       abrirVista(btn.dataset.vista, 'Quipu Office');
     });
+    
+  // Al abrir la app, mostrar directamente los tres programas
+  abrirVista('recibidor', 'Quipu Office');
   });
 
   /* ===== CARPETAS Y GOOGLE DRIVE ===== */
@@ -1514,7 +1527,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (resp.status === 401) {
         googleAccessToken = null;
         prender('rojo');
+        btnSync.classList.add('desconectado');
         syncTexto.textContent = 'Sesión vencida';
+        syncHora.textContent = 'volvé a conectar Drive';
         hablar('Tu sesión de Google venció. Volvé a conectar Drive para seguir sincronizando');
         return;
       }
@@ -1526,6 +1541,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem(DRIVE_FILE_ID_KEY, datos.id);
 
       prender('verde');
+      btnSync.classList.remove('desconectado');
       syncTexto.textContent = 'Sincronizado';
       syncHora.textContent = 'en Google Drive';
       hablar('¡Documentos guardados en tu Google Drive!');
@@ -2858,18 +2874,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnSync = document.getElementById('btnSync'), syncTexto = document.getElementById('syncTexto'), syncHora = document.getElementById('syncHora');
   btnSync.addEventListener('click', async () => {
-    if (googleAccessToken) { subirRespaldoAGoogleDrive(); return; }
-    if (btnSync.classList.contains('ocupado')) return;
-    btnSync.classList.add('ocupado'); syncTexto.textContent = 'Sincronizando…'; prender('amarillo');
-    await esperar(1000);
-    btnSync.classList.remove('ocupado'); syncTexto.textContent = 'Sincronizado'; syncHora.textContent = 'en este equipo';
-    prender('verde'); abrirVista('drive', 'Quipu Office'); hablar('Conectá tu cuenta en Drive para sincronizar en la nube');
+        if (googleAccessToken) { subirRespaldoAGoogleDrive(); return; }
+    // Sin sesión iniciada: lleva directo a la pantalla de Drive, sin simular nada
+    abrirVista('drive', 'Quipu Office');
+    hablar('Conectá tu cuenta de Google para sincronizar en la nube');
   });
 
   document.getElementById('btnCerrar').addEventListener('click', async () => {
     detenerLectura(); prender('rojo'); hablar('Cerrando Quipu Office…');
     await esperar(600); window.close();
-    setTimeout(() => { abrirVista('inicio', 'Quipu Office'); prender('verde'); }, 900);
+    setTimeout(() => { abrirVista('recibidor', 'Quipu Office'); prender('verde'); }, 900);
   });
 
   parlante.addEventListener('click', () => hablar('¡Hola! Soy Quipu Office'));
