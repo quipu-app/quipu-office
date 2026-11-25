@@ -1995,7 +1995,69 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ribFont').addEventListener('change', e => { enfocarHojaActiva(); document.execCommand('fontName', false, e.target.value); });
   document.getElementById('ribSize').addEventListener('change', e => { enfocarHojaActiva(); document.execCommand('fontSize', false, e.target.value); });
   document.getElementById('ribTextColor').addEventListener('input', e => { enfocarHojaActiva(); document.execCommand('foreColor', false, e.target.value); });
-  document.getElementById('btnHighlight').addEventListener('click', () => { enfocarHojaActiva(); document.execCommand('hiliteColor', false, '#FEF08A'); });
+   // ---- Resaltado: activar / desactivar ----
+  const botonResaltar = document.getElementById('btnHighlight');
+  const COLOR_RESALTADO = '#FEF08A';
+
+  // Busca el elemento resaltado más externo donde está el cursor (o null si no hay)
+  function resaltadoEnCursor() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return null;
+    let nodo = sel.anchorNode;
+    if (nodo && nodo.nodeType === Node.TEXT_NODE) nodo = nodo.parentElement;
+    const hoja = nodo && nodo.closest('.qtext-page-body');
+    if (!hoja) return null;
+    let encontrado = null;
+    while (nodo && nodo !== hoja) {
+      const estilo = getComputedStyle(nodo);
+      const fondo = estilo.backgroundColor;
+      if (estilo.display === 'inline' && fondo !== 'transparent' && fondo !== 'rgba(0, 0, 0, 0)') encontrado = nodo;
+      nodo = nodo.parentElement;
+    }
+    return encontrado;
+  }
+
+  // Corta el resaltado en el lugar del cursor y deja el cursor afuera, sin color
+  function salirDelResaltado(resaltado) {
+    const sel = window.getSelection();
+    const cursor = sel.getRangeAt(0);
+    const resto = document.createRange();
+    resto.setStart(cursor.startContainer, cursor.startOffset);
+    resto.setEnd(resaltado, resaltado.childNodes.length);
+    const textoDerecha = resto.extractContents();
+
+    const hueco = document.createTextNode('\u200B'); // espacio invisible para apoyar el cursor
+    resaltado.after(hueco);
+    if (textoDerecha.textContent.length) {
+      const copia = resaltado.cloneNode(false);
+      copia.appendChild(textoDerecha);
+      hueco.after(copia);
+    }
+    if (!resaltado.textContent.length) resaltado.remove();
+
+    const nuevo = document.createRange();
+    nuevo.setStart(hueco, 1);
+    nuevo.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(nuevo);
+  }
+
+  function actualizarBotonResaltar() {
+    botonResaltar.classList.toggle('activo', !!resaltadoEnCursor());
+  }
+
+  botonResaltar.addEventListener('mousedown', e => e.preventDefault()); // no le roba el foco a la hoja
+  botonResaltar.addEventListener('click', () => {
+    enfocarHojaActiva();
+    const sel = window.getSelection();
+    const resaltado = resaltadoEnCursor();
+    if (resaltado && sel.isCollapsed) salirDelResaltado(resaltado);                 // cursor adentro del amarillo: salir
+    else if (resaltado) document.execCommand('hiliteColor', false, 'transparent');  // texto seleccionado ya resaltado: quitar
+    else document.execCommand('hiliteColor', false, COLOR_RESALTADO);               // si no: resaltar
+    actualizarBotonResaltar();
+  });
+
+  document.addEventListener('selectionchange', actualizarBotonResaltar);
 
   const btnInsertTable = document.getElementById('btnInsertTable'), tablePopover = document.getElementById('tablePopover'), tablePopoverLabel = document.getElementById('tablePopoverLabel'), tableGridSelector = document.getElementById('tableGridSelector');
   let rangoGuardado = null;
